@@ -1,20 +1,20 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory } from 'vue-router';
 
 const routes = [
     {
-        path: "/",
-        redirect: "/generate"
+        path: '/',
+        redirect: '/generate',
     },
     {
-        path: "/generate",
-        name: "Generate",
-        component: () => import("../views/Generate.vue"),
+        path: '/generate',
+        name: 'Generate',
+        component: () => import('../views/Generate.vue'),
     },
     {
-        path: "/collection",
-        name: "VideoCollection",
-        component: () => import("../views/VideoCollection.vue"),
-    }
+        path: '/collection',
+        name: 'VideoCollection',
+        component: () => import('../views/VideoCollection.vue'),
+    },
 ];
 
 const router = createRouter({

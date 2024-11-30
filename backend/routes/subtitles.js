@@ -1,9 +1,9 @@
-import express from "express";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-import path from "path";
-import fs from "fs";
-import subtitleService from "../services/subtitleService.js";
+import express from 'express';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import path from 'path';
+import fs from 'fs';
+import subtitleService from '../services/subtitleService.js';
 
 const router = express.Router();
 
@@ -12,30 +12,30 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Create temp directory if it doesn't exist
-const tempDir = path.join(__dirname, "../temp/subtitles");
+const tempDir = path.join(__dirname, '../temp/subtitles');
 if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir, { recursive: true });
 }
 
 // Generate subtitles from text
-router.post("/generate", async (req, res) => {
+router.post('/generate', async (req, res) => {
     try {
         const { text, duration } = req.body;
         const outputPath = path.join(tempDir, `${Date.now()}.srt`);
         const subtitlePath = await subtitleService.generateSubtitlesFromText(
             text,
             duration,
-            outputPath,
+            outputPath
         );
         res.json({ subtitlePath });
     } catch (error) {
-        console.error("Error generating subtitles:", error);
+        console.error('Error generating subtitles:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
 // Burn subtitles into video
-router.post("/burn", async (req, res) => {
+router.post('/burn', async (req, res) => {
     try {
         const { videoPath, subtitlePath, style } = req.body;
         const outputPath = path.join(tempDir, `${Date.now()}_with_subs.mp4`);
@@ -43,11 +43,11 @@ router.post("/burn", async (req, res) => {
             videoPath,
             subtitlePath,
             outputPath,
-            style,
+            style
         );
         res.json({ videoPath: finalVideoPath });
     } catch (error) {
-        console.error("Error burning subtitles:", error);
+        console.error('Error burning subtitles:', error);
         res.status(500).json({ error: error.message });
     }
 });

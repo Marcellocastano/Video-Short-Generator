@@ -1,68 +1,68 @@
-import { exec } from "child_process";
-import { promisify } from "util";
-import path from "path";
-import fs from "fs";
-import fetch from "node-fetch";
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import path from 'path';
+import fs from 'fs';
+import fetch from 'node-fetch';
 
 const execAsync = promisify(exec);
 
 class VideoMashupService {
     async createMashup(videos, workingDir, audioDuration) {
         try {
-            console.log("Processing videos...");
+            console.log('Processing videos...');
             // First, process all videos to the same format
             const processedVideos = await Promise.all(
                 videos.map((video, index) =>
-                    this.processVideo(video, workingDir, index),
-                ),
+                    this.processVideo(video, workingDir, index)
+                )
             );
 
             // Calculate individual video duration and create segments
             const segmentDuration = audioDuration / videos.length;
-            console.log("Target segment duration:", segmentDuration);
+            console.log('Target segment duration:', segmentDuration);
 
-            console.log("Creating video segments...");
+            console.log('Creating video segments...');
             const segments = [];
             for (let i = 0; i < processedVideos.length; i++) {
                 const segment = await this.createSegment(
                     processedVideos[i],
                     workingDir,
                     i,
-                    segmentDuration,
+                    segmentDuration
                 );
                 segments.push(segment);
             }
 
             // Create the concat file for sequential playback
-            console.log("Creating concat file...");
-            const concatFile = path.join(workingDir, "concat.txt");
+            console.log('Creating concat file...');
+            const concatFile = path.join(workingDir, 'concat.txt');
             const concatContent = segments
-                .map((segment) => `file '${path.resolve(segment)}'`)
-                .join("\n");
+                .map(segment => `file '${path.resolve(segment)}'`)
+                .join('\n');
             fs.writeFileSync(concatFile, concatContent);
 
             // Combine all segments with precise timing
-            console.log("Combining segments...");
-            const outputPath = path.join(workingDir, "combined.mp4");
+            console.log('Combining segments...');
+            const outputPath = path.join(workingDir, 'combined.mp4');
             await execAsync(
-                `"${process.env.FFMPEG_PATH}" -f concat -safe 0 -i "${concatFile}" -c:v libx264 -preset medium -r 30 -t ${audioDuration} "${outputPath}"`,
+                `"${process.env.FFMPEG_PATH}" -f concat -safe 0 -i "${concatFile}" -c:v libx264 -preset medium -r 30 -t ${audioDuration} "${outputPath}"`
             );
 
             // Verify the output duration
             const { stdout: durationStr } = await execAsync(
-                `"${process.env.FFMPEG_PATH}" -i "${outputPath}" 2>&1 | grep "Duration" | cut -d ' ' -f 4 | sed s/,//`,
+                `"${process.env.FFMPEG_PATH}" -i "${outputPath}" 2>&1 | grep "Duration" | cut -d ' ' -f 4 | sed s/,//`
             );
             const [hours, minutes, seconds] = durationStr
                 .trim()
-                .split(":")
+                .split(':')
                 .map(Number);
             const outputDuration = hours * 3600 + minutes * 60 + seconds;
-            console.log("Output video duration:", outputDuration);
-            console.log("Target audio duration:", audioDuration);
+            console.log('Output video duration:', outputDuration);
+            console.log('Target audio duration:', audioDuration);
 
             return outputPath;
         } catch (error) {
-            console.error("Error in createMashup:", error);
+            console.error('Error in createMashup:', error);
             throw error;
         }
     }
@@ -79,10 +79,10 @@ class VideoMashupService {
             // Process video to vertical format with explicit output format
             const processedPath = path.join(
                 workingDir,
-                `processed_${index}.mp4`,
+                `processed_${index}.mp4`
             );
             await execAsync(
-                `"${process.env.FFMPEG_PATH}" -i "${videoPath}" -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920" -c:v libx264 -preset medium -r 30 "${processedPath}"`,
+                `"${process.env.FFMPEG_PATH}" -i "${videoPath}" -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920" -c:v libx264 -preset medium -r 30 "${processedPath}"`
             );
 
             // Verify the file exists and has proper permissions
@@ -101,11 +101,11 @@ class VideoMashupService {
 
             // Get video duration
             const { stdout: durationStr } = await execAsync(
-                `"${process.env.FFMPEG_PATH}" -i "${videoPath}" 2>&1 | grep "Duration" | cut -d ' ' -f 4 | sed s/,//`,
+                `"${process.env.FFMPEG_PATH}" -i "${videoPath}" 2>&1 | grep "Duration" | cut -d ' ' -f 4 | sed s/,//`
             );
             const [hours, minutes, seconds] = durationStr
                 .trim()
-                .split(":")
+                .split(':')
                 .map(Number);
             const videoDuration = hours * 3600 + minutes * 60 + seconds;
 
@@ -115,11 +115,11 @@ class VideoMashupService {
             // Create segment with loop if needed
             if (loopCount > 1) {
                 await execAsync(
-                    `"${process.env.FFMPEG_PATH}" -stream_loop ${loopCount - 1} -i "${videoPath}" -t ${duration} -c:v libx264 -preset medium -r 30 "${segmentPath}"`,
+                    `"${process.env.FFMPEG_PATH}" -stream_loop ${loopCount - 1} -i "${videoPath}" -t ${duration} -c:v libx264 -preset medium -r 30 "${segmentPath}"`
                 );
             } else {
                 await execAsync(
-                    `"${process.env.FFMPEG_PATH}" -i "${videoPath}" -t ${duration} -c:v libx264 -preset medium -r 30 "${segmentPath}"`,
+                    `"${process.env.FFMPEG_PATH}" -i "${videoPath}" -t ${duration} -c:v libx264 -preset medium -r 30 "${segmentPath}"`
                 );
             }
 
@@ -131,12 +131,12 @@ class VideoMashupService {
     }
 
     createFilterComplex(videoCount) {
-        if (videoCount === 1) return "";
+        if (videoCount === 1) return '';
 
         const splits = Array(videoCount)
             .fill(0)
             .map((_, i) => `[${i}:v]`)
-            .join("");
+            .join('');
 
         return `${splits}xstack=inputs=${videoCount}:layout=0_0|w0_0|0_h0|w0_h0[v]`;
     }

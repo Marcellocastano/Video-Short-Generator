@@ -1,217 +1,328 @@
 <template>
-  <div class="video-collection">
-    <h1>Raccolta Video</h1>
-    
-    <div class="video-grid">
-      <div v-for="video in videos" :key="video.id" class="video-card">
-        <div class="video-thumbnail">
-          <img :src="video.thumbnail || '/placeholder.png'" :alt="video.title">
-          <div class="video-duration">{{ formatDuration(video.duration) }}</div>
-        </div>
-        <div class="video-info">
-          <h3>{{ video.title }}</h3>
-          <p class="video-description">{{ video.description }}</p>
-          <div class="video-metadata">
-            <span><i class="fas fa-calendar"></i> {{ formatDate(video.publishAt) }}</span>
-            <span><i class="fas fa-hashtag"></i> {{ video.metadata?.hashtags?.join(', ') }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <div class="video-collection">
+        <h1>Raccolta Video</h1>
 
-    <div class="pagination">
-      <button 
-        :disabled="currentPage === 1" 
-        @click="changePage(currentPage - 1)"
-        class="page-btn"
-      >
-        <i class="fas fa-chevron-left"></i>
-      </button>
-      
-      <span class="page-info">Pagina {{ currentPage }} di {{ totalPages }}</span>
-      
-      <button 
-        :disabled="currentPage === totalPages" 
-        @click="changePage(currentPage + 1)"
-        class="page-btn"
-      >
-        <i class="fas fa-chevron-right"></i>
-      </button>
+        <div class="video-grid">
+            <div v-for="video in videos" :key="video.id" class="video-card">
+                <div class="video-thumbnail">
+                    <VideoPlayer
+                        :src="video.file_path"
+                        :show-controls="false"
+                    />
+                    <div class="video-actions">
+                        <button
+                            class="action-menu"
+                            @click="toggleMenu(video.id)"
+                        >
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div
+                            v-if="activeMenu === video.id"
+                            class="action-dropdown"
+                        >
+                            <button @click="showVideoInfo(video)">
+                                <i class="fas fa-info-circle"></i> Info
+                            </button>
+                            <button
+                                class="delete-btn"
+                                @click="showDeleteConfirm(video)"
+                            >
+                                <i class="fas fa-trash"></i> Elimina
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-info">
+                    <h3>{{ video.title || 'Video senza titolo' }}</h3>
+                    <div class="video-metadata">
+                        <span
+                            ><i class="fas fa-calendar"></i>
+                            {{ formatDate(video.created_at) }}</span
+                        >
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="totalVideos > 8" class="pagination">
+            <button
+                :disabled="currentPage === 1"
+                @click="changePage(currentPage - 1)"
+                class="page-btn"
+            >
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <span class="page-info"
+                >Pagina {{ currentPage }} di {{ totalPages }}</span
+            >
+
+            <button
+                :disabled="currentPage === totalPages"
+                @click="changePage(currentPage + 1)"
+                class="page-btn"
+            >
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- Modali -->
+        <DeleteVideoModal
+            v-model:show="showDeleteModal"
+            :video-id="selectedVideo?.id"
+            :video-title="selectedVideo?.title || 'Video senza titolo'"
+            @video-deleted="fetchVideos"
+        />
+
+        <VideoInfoModal
+            v-model:show="showInfoModal"
+            :video-id="selectedVideo?.id"
+        />
     </div>
-  </div>
 </template>
 
 <script>
-import axios from 'axios';
+    import axios from 'axios';
+    import DeleteVideoModal from '../components/DeleteVideoModal.vue';
+    import VideoInfoModal from '../components/VideoInfoModal.vue';
+    import VideoPlayer from '../components/VideoPlayer.vue';
 
-export default {
-  name: 'VideoCollection',
-  data() {
-    return {
-      videos: [],
-      currentPage: 1,
-      totalPages: 1,
-      pageSize: 12
-    }
-  },
-  methods: {
-    async fetchVideos() {
-      try {
-        const response = await axios.get(`/api/videos?page=${this.currentPage}&pageSize=${this.pageSize}`);
-        this.videos = response.data.videos;
-        this.totalPages = Math.ceil(response.data.total / this.pageSize);
-      } catch (error) {
-        console.error('Errore nel caricamento dei video:', error);
-      }
-    },
-    formatDate(date) {
-      return new Date(date).toLocaleDateString();
-    },
-    formatDuration(duration) {
-      if (!duration) return '00:00';
-      const minutes = Math.floor(duration / 60);
-      const seconds = duration % 60;
-      return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    },
-    async changePage(page) {
-      this.currentPage = page;
-      await this.fetchVideos();
-    }
-  },
-  mounted() {
-    this.fetchVideos();
-  }
-}
+    export default {
+        name: 'VideoCollection',
+        components: {
+            DeleteVideoModal,
+            VideoInfoModal,
+            VideoPlayer,
+        },
+        data() {
+            return {
+                videos: [],
+                currentPage: 1,
+                totalPages: 1,
+                pageSize: 8,
+                totalVideos: 0,
+                activeMenu: null,
+                showDeleteModal: false,
+                showInfoModal: false,
+                selectedVideo: null,
+                baseUrl: 'http://localhost:3000', // URL base senza /api
+            };
+        },
+        methods: {
+            async fetchVideos() {
+                try {
+                    const apiUrl = `${this.baseUrl}/api/videos?page=${this.currentPage}&pageSize=${this.pageSize}`;
+                    const response = await axios.get(apiUrl);
+
+                    this.videos = response.data.videos.map(video => {
+                        const cleanPath = video.file_path
+                            .replace(/^\/uploads\/?/, '')
+                            .replace(/\/+/g, '/');
+
+                        return {
+                            ...video,
+                            file_path: `${this.baseUrl}/uploads/${cleanPath}`,
+                        };
+                    });
+
+                    this.totalVideos = response.data.total;
+                    this.totalPages = Math.ceil(
+                        this.totalVideos / this.pageSize
+                    );
+                } catch (error) {
+                    console.error('Errore nel caricamento dei video:', error);
+                }
+            },
+            formatDate(date) {
+                if (!date) return 'Data non disponibile';
+                return new Date(date).toLocaleDateString('it-IT', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                });
+            },
+            toggleMenu(videoId) {
+                this.activeMenu = this.activeMenu === videoId ? null : videoId;
+            },
+            showVideoInfo(video) {
+                this.selectedVideo = video;
+                this.showInfoModal = true;
+                this.activeMenu = null;
+            },
+            showDeleteConfirm(video) {
+                this.selectedVideo = video;
+                this.showDeleteModal = true;
+                this.activeMenu = null;
+            },
+            async deleteVideo(videoId) {
+                if (confirm('Sei sicuro di voler eliminare questo video?')) {
+                    try {
+                        await axios.delete(
+                            `${this.baseUrl}/api/videos/${videoId}`
+                        );
+                        await this.fetchVideos();
+                    } catch (error) {
+                        console.error(
+                            "Errore durante l'eliminazione del video:",
+                            error
+                        );
+                    }
+                }
+                this.activeMenu = null;
+            },
+            async changePage(page) {
+                this.currentPage = page;
+                await this.fetchVideos();
+            },
+        },
+        mounted() {
+            this.fetchVideos();
+            // Chiudi il menu quando si clicca fuori
+            document.addEventListener('click', e => {
+                if (!e.target.closest('.video-actions')) {
+                    this.activeMenu = null;
+                }
+            });
+        },
+    };
 </script>
 
 <style scoped>
-.video-collection {
-  padding: 20px;
-  margin-left: var(--sidebar-width);
-  transition: margin-left 0.3s ease;
-}
+    .video-collection {
+        padding: 20px;
+        margin-left: var(--sidebar-width);
+        transition: margin-left 0.3s ease;
+    }
 
-.video-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
+    .video-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
 
-.video-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  transition: transform 0.2s ease;
-}
+    .video-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        transition: transform 0.2s ease;
+    }
 
-.video-card:hover {
-  transform: translateY(-5px);
-}
+    .video-card:hover {
+        transform: translateY(-5px);
+    }
 
-.video-thumbnail {
-  position: relative;
-  width: 100%;
-  padding-top: 56.25%; /* 16:9 Aspect Ratio */
-}
+    .video-thumbnail {
+        position: relative;
+        width: 100%;
+    }
 
-.video-thumbnail img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+    .video-actions {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+    }
 
-.video-duration {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.8em;
-}
+    .action-menu {
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-.video-info {
-  padding: 15px;
-}
+    .action-dropdown {
+        position: absolute;
+        top: 40px;
+        right: 0;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        z-index: 1000;
+    }
 
-.video-info h3 {
-  margin: 0 0 10px 0;
-  font-size: 1.1em;
-  color: var(--text-color);
-}
+    .action-dropdown button {
+        display: block;
+        width: 100%;
+        padding: 8px 16px;
+        border: none;
+        background: none;
+        text-align: left;
+        cursor: pointer;
+        white-space: nowrap;
+    }
 
-.video-description {
-  color: #666;
-  font-size: 0.9em;
-  margin-bottom: 10px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+    .action-dropdown button:hover {
+        background: #f5f5f5;
+    }
 
-.video-metadata {
-  display: flex;
-  gap: 15px;
-  font-size: 0.8em;
-  color: #888;
-}
+    .action-dropdown .delete-btn {
+        color: #dc3545;
+    }
 
-.video-metadata i {
-  margin-right: 5px;
-}
+    .action-dropdown .delete-btn:hover {
+        background: #ffebee;
+    }
 
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 30px;
-  gap: 15px;
-}
+    .video-info {
+        padding: 15px;
+    }
 
-.page-btn {
-  background: rgba(40, 44, 52, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  padding: 8px 15px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
+    .video-info h3 {
+        margin: 0 0 10px 0;
+        font-size: 1.1em;
+        color: var(--text-color);
+    }
 
-.page-btn:disabled {
-  background: rgba(204, 204, 204, 0.7);
-  cursor: not-allowed;
-}
+    .video-metadata {
+        display: flex;
+        gap: 15px;
+        font-size: 0.8em;
+        color: #888;
+    }
 
-.page-btn:not(:disabled):hover {
-  background: rgba(40, 44, 52, 0.9);
-}
+    .video-metadata i {
+        margin-right: 5px;
+    }
 
-.page-info {
-  font-size: 0.9em;
-  color: #666;
-}
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 30px;
+        gap: 15px;
+    }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .video-collection {
-    margin-left: var(--sidebar-width-collapsed);
-  }
-  
-  .video-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  }
-}
+    .page-btn {
+        background: rgba(40, 44, 52, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .page-btn:disabled {
+        background: rgba(204, 204, 204, 0.7);
+        cursor: not-allowed;
+    }
+
+    .page-btn:not(:disabled):hover {
+        background: rgba(40, 44, 52, 0.9);
+    }
 </style>
