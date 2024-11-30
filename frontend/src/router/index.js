@@ -1,21 +1,24 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Home from "../views/Home.vue";
 
 const routes = [
     {
         path: "/",
-        name: "Home",
-        component: Home,
+        redirect: "/generate"
     },
     {
         path: "/generate",
         name: "Generate",
         component: () => import("../views/Generate.vue"),
     },
+    {
+        path: "/collection",
+        name: "VideoCollection",
+        component: () => import("../views/VideoCollection.vue"),
+    }
 ];
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHistory(import.meta.env.BASE_URL || ''),
     routes,
 });
 

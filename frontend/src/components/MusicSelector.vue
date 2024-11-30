@@ -1,23 +1,5 @@
 <template>
     <div class="music-selector">
-        <!-- Selected Music Display -->
-        <div v-if="selectedMusic" class="selected-music glass-panel">
-            <div class="music-preview">
-                <div class="music-info">
-                    <span class="music-title">{{ selectedMusic.title }}</span>
-                    <div class="audio-container">
-                        <audio
-                            :key="'selected-' + selectedMusic.id"
-                            :src="selectedMusic.preview_url"
-                            controls
-                            class="audio-preview"
-                            @play="playAudio($event, selectedMusic)"
-                        ></audio>
-                    </div>
-                </div>
-                <button @click="clearSelection" class="remove-button">×</button>
-            </div>
-        </div>
 
         <!-- Modal -->
         <div v-if="props.show" class="modal-overlay" @click="closeModal">

@@ -1,311 +1,30 @@
 <script setup>
-import { ref, watchEffect, computed } from "vue";
-import VideoSelector from "./components/VideoSelector.vue";
-import SearchModal from "./components/SearchModal.vue";
-import MusicSelector from "./components/MusicSelector.vue";
+import { ref } from "vue";
+import Sidebar from "./components/Sidebar.vue";
 
-const text = ref("");
-const selectedVideos = ref([]);
-const language = ref("en-US");
-const voice = ref("male");
-const generating = ref(false);
-const generationProgress = ref(0);
-const generationStep = ref("");
-const error = ref(null);
-const videoSelector = ref(null);
-const showSearchModal = ref(false);
-const searchResults = ref([]);
-const currentSearchQuery = ref("");
-const selectedMusic = ref(null);
-const showMusicModal = ref(false);
-const musicSearchResults = ref([]);
-const musicSearchQuery = ref("");
-const generatedVideoUrl = ref("");
+const isSidebarCollapsed = ref(false);
 
-// Esponiamo le funzioni globalmente per il VideoSelector
-window.$app = {
-    showSearchResults(query, results) {
-        currentSearchQuery.value = query;
-        searchResults.value = results;
-        showSearchModal.value = true;
-    },
-};
-
-const handleVideoSelection = (videos) => {
-    selectedVideos.value = videos;
-};
-
-const updateSelectedVideos = (videos) => {
-    selectedVideos.value = videos;
-};
-
-const closeSearchModal = () => {
-    showSearchModal.value = false;
-};
-
-const toggleVideoSelection = (video) => {
-    const index = selectedVideos.value.findIndex((v) => v.id === video.id);
-    if (index === -1) {
-        selectedVideos.value.push(video);
-    } else {
-        selectedVideos.value.splice(index, 1);
-    }
-};
-
-const canGenerate = ref(false);
-
-watchEffect(() => {
-    canGenerate.value = text.value.trim() && selectedVideos.value.length > 0;
-});
-
-const handleMusicSelected = (music) => {
-    selectedMusic.value = music;
-};
-
-const searchMusic = async () => {
-    if (!musicSearchQuery.value.trim()) return;
-
-    try {
-        const response = await fetch(
-            `/api/music/search?query=${encodeURIComponent(musicSearchQuery.value)}`,
-        );
-        if (!response.ok) throw new Error("Ricerca musica fallita");
-
-        const data = await response.json();
-        musicSearchResults.value = data;
-        showMusicModal.value = true;
-    } catch (err) {
-        console.error("Error searching music:", err);
-        error.value = "Errore durante la ricerca della musica";
-    }
-};
-
-const downloadVideo = (url) => {
-    // Creiamo un link nascosto
-    const a = document.createElement("a");
-    a.style.display = "none";
-    a.href = url;
-    a.download = "generated-video.mp4"; // Nome del file per il download
-    document.body.appendChild(a);
-    
-    // Scarichiamo il file usando fetch per verificare che esista
-    fetch(url)
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.blob();
-        })
-        .then(blob => {
-            // Creiamo un URL oggetto per il blob
-            const blobUrl = window.URL.createObjectURL(blob);
-            a.href = blobUrl;
-            a.click();
-            
-            // Pulizia
-            window.URL.revokeObjectURL(blobUrl);
-            document.body.removeChild(a);
-        })
-        .catch(error => {
-            console.error('Error downloading video:', error);
-            error.value = "Errore durante il download del video";
-        });
-};
-
-const generateVideo = async () => {
-    if (!text.value.trim() || selectedVideos.value.length === 0) return;
-
-    generating.value = true;
-    generationProgress.value = 0;
-    generationStep.value = "";
-    error.value = null;
-    generatedVideoUrl.value = "";
-
-    try {
-        const response = await fetch("/api/videos/generate", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                text: text.value,
-                videos: selectedVideos.value.map((v) => v.videos.large.url),
-                language: language.value,
-                voice: voice.value,
-                backgroundMusic: selectedMusic.value
-                    ? selectedMusic.value.download_url
-                    : null,
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error("Failed to generate video");
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value);
-            // Split chunk by newlines and process each line
-            const lines = chunk.split('\n').filter(line => line.trim());
-            for (const line of lines) {
-                try {
-                    const data = JSON.parse(line);
-                    if (data.progress) {
-                        generationProgress.value = data.progress;
-                        generationStep.value = data.step;
-                    } else if (data.videoUrl) {
-                        generatedVideoUrl.value = data.videoUrl;
-                        // Download automatico usando la nuova funzione
-                        downloadVideo(data.videoUrl);
-                    }
-                } catch (e) {
-                    console.error("Error parsing progress:", e, "Line:", line);
-                }
-            }
-        }
-    } catch (err) {
-        error.value = err.message;
-        console.error("Error generating video:", err);
-    } finally {
-        generating.value = false;
-        generationProgress.value = 0;
-        generationStep.value = "";
-    }
+const toggleSidebar = () => {
+    isSidebarCollapsed.value = !isSidebarCollapsed.value;
 };
 </script>
 
 <template>
     <div class="app">
-        <div class="logo-container">
-            <img src="./assets/logo.png" alt="Logo" />
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        
+        <Sidebar
+            :is-collapsed="isSidebarCollapsed"
+            @toggle="toggleSidebar"
+        />
+        <div
+            class="content-wrapper"
+            :class="{ 'sidebar-collapsed': isSidebarCollapsed }"
+        >
+            <router-view />
         </div>
-        <main class="main-container">
-            <div class="glass-container">
-                <div class="content">
-                    <VideoSelector
-                        ref="videoSelector"
-                        @selected="updateSelectedVideos"
-                    />
-
-                    <!-- Music Search Input -->
-                    <div class="music-search">
-                        <div class="search-container">
-                            <input
-                                v-model="musicSearchQuery"
-                                @keyup.enter="searchMusic"
-                                type="text"
-                                class="glass-input"
-                                placeholder="Cerca musica di sottofondo..."
-                            />
-                            <button
-                                @click="searchMusic"
-                                class="glass-button"
-                                :disabled="!musicSearchQuery.trim()"
-                            >
-                                Cerca Musica
-                            </button>
-                        </div>
-
-                        <div v-if="selectedMusic" class="selected-music-info">
-                            <span>{{ selectedMusic.title }}</span>
-                            <span style="opacity: 0.7">{{
-                                selectedMusic.artist
-                            }}</span>
-                        </div>
-                    </div>
-
-                    <div class="text-input">
-                        <textarea
-                            v-model="text"
-                            class="glass-input"
-                            placeholder="Enter your text here..."
-                            rows="4"
-                        ></textarea>
-                    </div>
-
-                    <div class="voice-options">
-                        <div class="options-grid">
-                            <div class="option">
-                                <select v-model="language" class="glass-input">
-                                    <option value="en-US">English (US)</option>
-                                    <option value="it-IT">Italian</option>
-                                </select>
-                            </div>
-
-                            <div class="option">
-                                <select v-model="voice" class="glass-input">
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div v-if="error" class="error">{{ error }}</div>
-
-                    <button
-                        @click="generateVideo"
-                        class="glass-button generate-button"
-                        :disabled="!canGenerate || generating"
-                    >
-                        {{ generating ? "Creazione..." : "Crea" }}
-                    </button>
-
-                    <div v-if="generating" class="generation-progress">
-                        <div class="progress-bar">
-                            <div
-                                class="progress-fill"
-                                :style="{ width: generationProgress + '%' }"
-                            ></div>
-                        </div>
-                        <div class="progress-step">{{ generationStep }}</div>
-                    </div>
-
-                    <!-- Sezione Video Generato -->
-                    <div v-if="generatedVideoUrl" class="generated-video-section">
-                        <h3>Video Generato</h3>
-                        <div class="video-preview">
-                            <video 
-                                :src="generatedVideoUrl" 
-                                controls
-                                class="preview-player"
-                            >
-                                Il tuo browser non supporta il tag video.
-                            </video>
-                        </div>
-                        <div class="download-section">
-                            <button 
-                                @click="downloadVideo(generatedVideoUrl)"
-                                class="glass-button download-button"
-                            >
-                                Scarica Nuovamente
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Modals -->
-        <SearchModal
-            v-if="showSearchModal"
-            :show="showSearchModal"
-            :videos="searchResults"
-            :searchQuery="currentSearchQuery"
-            :selectedVideos="selectedVideos"
-            @close="closeSearchModal"
-            @toggle-selection="toggleVideoSelection"
-        />
-
-        <MusicSelector
-            :show="showMusicModal"
-            :searchResults="musicSearchResults"
-            @update:show="showMusicModal = $event"
-            @selected="handleMusicSelected"
-        />
     </div>
 </template>
 
@@ -319,6 +38,11 @@ const generateVideo = async () => {
     --glass-highlight: rgba(255, 255, 255, 0.12);
     --glass-shadow: rgba(0, 0, 0, 0.15);
     --text-color: #0081a7;
+    --primary-color: #0081a7;
+    --secondary-color: #fed9b7;
+    --background-color: #f5f5f5;
+    --sidebar-width: 250px;
+    --sidebar-width-collapsed: 60px;
 }
 
 * {
@@ -580,11 +304,6 @@ h2 {
     opacity: 0.8;
 }
 
-.text-input,
-.voice-options {
-    margin-bottom: 2rem;
-}
-
 .error {
     background: rgba(255, 0, 0, 0.1);
     border: 1px solid rgba(255, 0, 0, 0.2);
@@ -600,8 +319,16 @@ h2 {
     min-height: 100vh;
     position: relative;
     display: flex;
-    flex-direction: column;
-    align-items: center;
+}
+
+.content-wrapper {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    transition: margin-left 0.3s ease;
+}
+
+.sidebar.collapsed + .content-wrapper {
+    margin-left: var(--sidebar-width-collapsed);
 }
 
 .main-container {
@@ -650,10 +377,6 @@ h2 {
     font-size: 0.9rem;
     color: var(--text-color);
     opacity: 0.8;
-}
-
-.music-search {
-    margin-bottom: 2rem;
 }
 
 .search-container {
@@ -706,7 +429,6 @@ h2 {
 
 .video-preview {
     width: 100%;
-    margin-bottom: 1rem;
     border-radius: 0.5rem;
     overflow: hidden;
     background: rgba(0, 0, 0, 0.1);

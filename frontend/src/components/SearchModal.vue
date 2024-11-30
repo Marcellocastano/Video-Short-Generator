@@ -49,23 +49,15 @@
 export default {
     name: "SearchModal",
     props: {
-        show: {
-            type: Boolean,
-            required: true,
-        },
-        videos: {
-            type: Array,
-            required: true,
-        },
-        searchQuery: {
-            type: String,
-            required: true,
-        },
+        show: Boolean,
+        videos: Array,
+        searchQuery: String,
         selectedVideos: {
             type: Array,
-            required: true,
-        },
+            default: () => []
+        }
     },
+    emits: ['close', 'update:selectedVideos'],
     data() {
         return {
             videoRefs: {},
@@ -73,18 +65,27 @@ export default {
     },
     methods: {
         closeModal() {
-            this.$emit("close");
+            this.$emit('close');
         },
         formatDuration(seconds) {
             const minutes = Math.floor(seconds / 60);
             const remainingSeconds = seconds % 60;
-            return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
         },
         isSelected(video) {
-            return this.selectedVideos.some((v) => v.id === video.id);
+            return this.selectedVideos.some(v => v.id === video.id);
         },
         toggleVideoSelection(video) {
-            this.$emit("toggle-selection", video);
+            const newSelectedVideos = [...this.selectedVideos];
+            const index = newSelectedVideos.findIndex(v => v.id === video.id);
+            
+            if (index === -1) {
+                newSelectedVideos.push(video);
+            } else {
+                newSelectedVideos.splice(index, 1);
+            }
+            
+            this.$emit('update:selectedVideos', newSelectedVideos);
         },
         playVideo(video) {
             video.play();

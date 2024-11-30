@@ -27,7 +27,7 @@ router.get("/search", async (req, res) => {
             new URLSearchParams({
                 client_id: clientId,
                 format: "json",
-                limit: "50",
+                limit: "12",
                 namesearch: query,
                 include: "musicinfo",
                 audioformat: "mp32",

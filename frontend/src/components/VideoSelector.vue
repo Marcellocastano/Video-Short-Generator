@@ -1,4 +1,3 @@
-<!-- VideoSelector.vue -->
 <template>
     <div class="video-selector">
         <div class="search-section">
@@ -19,32 +18,58 @@
             </div>
         </div>
 
-        <div v-if="selectedVideos.length > 0" class="selected-videos">
-            <div
-                v-for="video in selectedVideos"
-                :key="video.id"
-                class="selected-video-chip"
-            >
-                <span>Video {{ video.id }}</span>
-                <button
-                    @click="() => toggleVideoSelection(video)"
-                    class="remove-button"
+        <!-- Selected Videos Preview -->
+        <div v-if="selectedVideos.length > 0" class="selected-videos-preview">
+            <h3 class="preview-title">Video Selezionati</h3>
+            <div class="selected-videos-grid">
+                <div 
+                    v-for="video in selectedVideos" 
+                    :key="video.id"
+                    class="selected-video-item"
                 >
-                    ×
-                </button>
+                    <div class="video-preview-container">
+                        <video 
+                            :src="video.preview" 
+                            loop 
+                            muted 
+                            class="video-thumbnail"
+                            @mouseover="e => e.target.play()"
+                            @mouseleave="e => { e.target.pause(); e.target.currentTime = 0; }"
+                        ></video>
+                        <button 
+                            @click="removeVideo(video)"
+                            class="remove-video-button"
+                            title="Rimuovi video"
+                        >
+                            ×
+                        </button>
+                    </div>
+                    <div class="video-duration">{{ formatDuration(video.duration) }}</div>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 
-const emit = defineEmits(["selected"]);
+const emit = defineEmits(["update:modelValue"]);
 const searchQuery = ref("");
 const selectedVideos = ref([]);
 const loading = ref(false);
 const error = ref(null);
+
+const props = defineProps({
+    modelValue: {
+        type: Array,
+        default: () => []
+    }
+});
+
+watch(() => props.modelValue, (newValue) => {
+    selectedVideos.value = newValue;
+}, { immediate: true });
 
 async function performSearch() {
     if (!searchQuery.value.trim()) return;
@@ -67,6 +92,20 @@ async function performSearch() {
     }
 }
 
+function removeVideo(video) {
+    const index = selectedVideos.value.findIndex((v) => v.id === video.id);
+    if (index !== -1) {
+        selectedVideos.value.splice(index, 1);
+        emit("update:modelValue", selectedVideos.value);
+    }
+}
+
+function formatDuration(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+}
+
 function toggleVideoSelection(video) {
     const index = selectedVideos.value.findIndex((v) => v.id === video.id);
     if (index === -1) {
@@ -74,7 +113,7 @@ function toggleVideoSelection(video) {
     } else {
         selectedVideos.value.splice(index, 1);
     }
-    emit("selected", selectedVideos.value);
+    emit("update:modelValue", selectedVideos.value);
 }
 </script>
 
@@ -144,41 +183,78 @@ function toggleVideoSelection(video) {
     cursor: not-allowed;
 }
 
-.selected-videos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-.selected-video-chip {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
+.selected-videos-preview {
+    margin: 1.5rem 0;
+    padding: 1rem;
     background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 1rem;
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    color: var(--text-color);
-    box-shadow:
-        0 4px 16px -2px var(--glass-shadow),
-        inset 0 1px 0 0 var(--glass-highlight);
 }
 
-.remove-button {
-    background: none;
-    border: none;
+.preview-title {
+    font-size: 1.1rem;
     color: var(--text-color);
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 0 0.3rem;
+    margin-bottom: 1rem;
+}
+
+.selected-videos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.selected-video-item {
+    position: relative;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.video-preview-container {
+    position: relative;
+    aspect-ratio: 9/16;
+}
+
+.video-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0.5rem;
+}
+
+.remove-video-button {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
 }
 
-.remove-button:hover {
-    background: rgba(255, 255, 255, 0.1);
+.remove-video-button:hover {
+    background: rgba(255, 0, 0, 0.8);
+    transform: scale(1.1);
+}
+
+.video-duration {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    padding: 0.2rem 0.5rem;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border-radius: 0.25rem;
+    font-size: 0.8rem;
 }
 </style>
