@@ -36,12 +36,6 @@ router.post(
 // Rotta per ottenere tutti i video
 router.get('/', videoController.getAllVideos);
 
-// Rotta per ottenere un video specifico
-router.get('/:id', videoController.getVideoById);
-
-// Rotta per eliminare un video
-router.delete('/:id', videoController.deleteVideo);
-
 // Search videos from Pixabay
 router.get('/search', async (req, res) => {
     try {
@@ -69,12 +63,7 @@ router.get('/search', async (req, res) => {
             duration: video.duration,
             tags: video.tags,
             preview: video.videos.tiny.url,
-            videos: {
-                large: video.videos.large,
-                medium: video.videos.medium,
-                small: video.videos.small,
-                tiny: video.videos.tiny,
-            },
+            videos: video.videos,
         }));
 
         res.json(videos);
@@ -83,6 +72,12 @@ router.get('/search', async (req, res) => {
         res.status(500).json({ error: 'Failed to search videos' });
     }
 });
+
+// Rotta per ottenere un video specifico
+router.get('/:id', videoController.getVideoById);
+
+// Rotta per eliminare un video
+router.delete('/:id', videoController.deleteVideo);
 
 // Process and combine video components
 router.post('/generate', async (req, res) => {
