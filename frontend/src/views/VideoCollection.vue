@@ -114,7 +114,7 @@
                     const apiUrl = `${this.baseUrl}/api/videos?page=${this.currentPage}&pageSize=${this.pageSize}`;
                     const response = await axios.get(apiUrl);
 
-                    this.videos = response.data.videos.map((video) => {
+                    this.videos = response.data.videos.map(video => {
                         const cleanPath = video.file_path
                             .replace(/^\/uploads\/?/, '')
                             .replace(/\/+/g, '/');
@@ -126,9 +126,11 @@
                     });
 
                     this.totalVideos = response.data.total;
-                    this.totalPages = Math.ceil(this.totalVideos / this.pageSize)
+                    this.totalPages = Math.ceil(
+                        this.totalVideos / this.pageSize
+                    );
                 } catch (error) {
-                    console.error('Errore nel caricamento dei video:', error)
+                    console.error('Errore nel caricamento dei video:', error);
                 }
             },
             formatDate(date) {
@@ -157,12 +159,14 @@
             async deleteVideo(videoId) {
                 if (confirm('Sei sicuro di voler eliminare questo video?')) {
                     try {
-                        await axios.delete(`${this.baseUrl}/api/videos/${videoId}`);
+                        await axios.delete(
+                            `${this.baseUrl}/api/videos/${videoId}`
+                        );
                         await this.fetchVideos();
                     } catch (error) {
                         console.error(
-                            'Errore durante l\'eliminazione del video:',
-                            error,
+                            "Errore durante l'eliminazione del video:",
+                            error
                         );
                     }
                 }
@@ -176,7 +180,7 @@
         mounted() {
             this.fetchVideos();
             // Chiudi il menu quando si clicca fuori
-            document.addEventListener('click', (e) => {
+            document.addEventListener('click', e => {
                 if (!e.target.closest('.video-actions')) {
                     this.activeMenu = null;
                 }

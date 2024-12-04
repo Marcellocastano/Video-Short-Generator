@@ -16,7 +16,7 @@
                 <div class="info-grid">
                     <div class="info-item">
                         <label>Titolo</label>
-                        <p>{{ videoInfo.title || "Non specificato" }}</p>
+                        <p>{{ videoInfo.title || 'Non specificato' }}</p>
                     </div>
                     <div class="info-item">
                         <label>Data Creazione</label>
@@ -25,7 +25,7 @@
                     <div class="info-item">
                         <label>Descrizione</label>
                         <p>
-                            {{ videoInfo.description || "Nessuna descrizione" }}
+                            {{ videoInfo.description || 'Nessuna descrizione' }}
                         </p>
                     </div>
                     <div class="info-item">
@@ -38,7 +38,7 @@
                         <label>Privacy</label>
                         <p>
                             {{
-                                videoInfo.metadata?.privacy || "Non specificata"
+                                videoInfo.metadata?.privacy || 'Non specificata'
                             }}
                         </p>
                     </div>
@@ -89,12 +89,14 @@
                 this.loading = true;
                 this.error = null;
                 try {
-                    const response = await axios.get(`/api/videos/${this.videoId}`);
+                    const response = await axios.get(
+                        `/api/videos/${this.videoId}`
+                    );
                     this.videoInfo = response.data;
                 } catch (error) {
                     console.error(
                         'Errore nel caricamento delle informazioni:',
-                        error,
+                        error
                     );
                     this.error =
                         'Errore nel caricamento delle informazioni del video';
@@ -114,7 +116,7 @@
             },
             formatHashtags(hashtags) {
                 if (!hashtags || !hashtags.length) return 'Nessun hashtag';
-                return hashtags.map((tag) => `#${tag}`).join(' ');
+                return hashtags.map(tag => `#${tag}`).join(' ');
             },
             formatSize(bytes) {
                 if (!bytes) return 'Dimensione non disponibile';

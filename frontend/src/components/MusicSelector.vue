@@ -99,12 +99,12 @@
         stopAllAudio();
     };
 
-    const selectAndClose = (track) => {
+    const selectAndClose = track => {
         selectMusic(track);
         closeModal();
     };
 
-    const selectMusic = (track) => {
+    const selectMusic = track => {
         selectedMusic.value = track;
         emit('selected', track);
     };
@@ -115,11 +115,11 @@
         emit('selected', null);
     };
 
-    const isSelected = (track) => {
+    const isSelected = track => {
         return selectedMusic.value?.id === track.id;
     };
 
-    const formatDuration = (seconds) => {
+    const formatDuration = seconds => {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
         return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
@@ -140,7 +140,9 @@
 
     const stopAllAudio = async () => {
         if (currentlyPlaying.value) {
-            const currentAudio = audioElements.value.get(currentlyPlaying.value);
+            const currentAudio = audioElements.value.get(
+                currentlyPlaying.value
+            );
             if (currentAudio) {
                 currentAudio.pause();
                 currentAudio.currentTime = 0;

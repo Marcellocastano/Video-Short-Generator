@@ -1,6 +1,6 @@
 <script setup>
-    import { ref } from "vue";
-    import Sidebar from "./components/Sidebar.vue";
+    import { ref } from 'vue';
+    import Sidebar from './components/Sidebar.vue';
 
     const isSidebarCollapsed = ref(false);
 

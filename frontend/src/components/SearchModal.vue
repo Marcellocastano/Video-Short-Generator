@@ -73,11 +73,13 @@
                 return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
             },
             isSelected(video) {
-                return this.selectedVideos.some((v) => v.id === video.id);
+                return this.selectedVideos.some(v => v.id === video.id);
             },
             toggleVideoSelection(video) {
                 const newSelectedVideos = [...this.selectedVideos];
-                const index = newSelectedVideos.findIndex((v) => v.id === video.id);
+                const index = newSelectedVideos.findIndex(
+                    v => v.id === video.id
+                );
 
                 if (index === -1) {
                     newSelectedVideos.push(video);
