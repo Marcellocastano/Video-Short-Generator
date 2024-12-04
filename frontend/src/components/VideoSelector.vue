@@ -33,9 +33,9 @@
                             loop
                             muted
                             class="video-thumbnail"
-                            @mouseover="e => e.target.play()"
+                            @mouseover="(e) => e.target.play()"
                             @mouseleave="
-                                e => {
+                                (e) => {
                                     e.target.pause();
                                     e.target.currentTime = 0;
                                 }
@@ -76,10 +76,10 @@
 
     watch(
         () => props.modelValue,
-        newValue => {
+        (newValue) => {
             selectedVideos.value = newValue;
         },
-        { immediate: true }
+        { immediate: true },
     );
 
     async function performSearch() {
@@ -90,7 +90,7 @@
 
         try {
             const response = await fetch(
-                `/api/videos/search?query=${encodeURIComponent(searchQuery.value)}`
+                `/api/videos/search?query=${encodeURIComponent(searchQuery.value)}`,
             );
             if (!response.ok) throw new Error('Search failed');
 
@@ -104,7 +104,7 @@
     }
 
     function removeVideo(video) {
-        const index = selectedVideos.value.findIndex(v => v.id === video.id);
+        const index = selectedVideos.value.findIndex((v) => v.id === video.id);
         if (index !== -1) {
             selectedVideos.value.splice(index, 1);
             emit('update:modelValue', selectedVideos.value);
@@ -118,7 +118,7 @@
     }
 
     function toggleVideoSelection(video) {
-        const index = selectedVideos.value.findIndex(v => v.id === video.id);
+        const index = selectedVideos.value.findIndex((v) => v.id === video.id);
         if (index === -1) {
             selectedVideos.value.push(video);
         } else {

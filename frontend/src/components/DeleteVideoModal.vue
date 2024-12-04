@@ -16,7 +16,7 @@
                     @click="confirmDelete"
                     :disabled="isDeleting"
                 >
-                    {{ isDeleting ? 'Eliminazione...' : 'Elimina' }}
+                    {{ isDeleting ? "Eliminazione..." : "Elimina" }}
                 </button>
             </div>
         </div>
@@ -56,8 +56,8 @@
                     this.closeModal();
                 } catch (error) {
                     console.error(
-                        "Errore durante l'eliminazione del video:",
-                        error
+                        'Errore durante l\'eliminazione del video:',
+                        error,
                     );
                 } finally {
                     this.isDeleting = false;

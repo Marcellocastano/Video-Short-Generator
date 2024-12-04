@@ -73,7 +73,7 @@
                         class="glass-button generate-button"
                         :disabled="!canGenerate || generating"
                     >
-                        {{ generating ? 'Creazione...' : 'Crea' }}
+                        {{ generating ? "Creazione..." : "Crea" }}
                     </button>
 
                     <div v-if="generating" class="generation-progress">
@@ -115,8 +115,8 @@
                             >
                                 {{
                                     saving
-                                        ? 'Salvataggio...'
-                                        : 'Salva in Raccolta'
+                                        ? "Salvataggio..."
+                                        : "Salva in Raccolta"
                                 }}
                             </button>
                         </div>
@@ -178,11 +178,11 @@
         },
     };
 
-    const handleVideoSelection = videos => {
+    const handleVideoSelection = (videos) => {
         selectedVideos.value = videos;
     };
 
-    const updateSelectedVideos = videos => {
+    const updateSelectedVideos = (videos) => {
         selectedVideos.value = videos;
     };
 
@@ -190,8 +190,8 @@
         showSearchModal.value = false;
     };
 
-    const toggleVideoSelection = video => {
-        const index = selectedVideos.value.findIndex(v => v.id === video.id);
+    const toggleVideoSelection = (video) => {
+        const index = selectedVideos.value.findIndex((v) => v.id === video.id);
         if (index === -1) {
             selectedVideos.value.push(video);
         } else {
@@ -202,11 +202,10 @@
     const canGenerate = ref(false);
 
     watchEffect(() => {
-        canGenerate.value =
-            text.value.trim() && selectedVideos.value.length > 0;
+        canGenerate.value = text.value.trim() && selectedVideos.value.length > 0;
     });
 
-    const handleMusicSelected = music => {
+    const handleMusicSelected = (music) => {
         selectedMusic.value = {
             title: music.title,
             artist: music.artist,
@@ -218,7 +217,7 @@
     const searchMusic = async () => {
         try {
             const response = await fetch(
-                `/api/music/search?query=${encodeURIComponent(musicSearchQuery.value)}`
+                `/api/music/search?query=${encodeURIComponent(musicSearchQuery.value)}`,
             );
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -231,7 +230,7 @@
         }
     };
 
-    const downloadVideo = async url => {
+    const downloadVideo = async (url) => {
         try {
             const response = await fetch(url);
             const blob = await response.blob();
@@ -275,12 +274,12 @@
                 voice: voice.value,
                 backgroundMusic: selectedMusic.value
                     ? {
-                          title: selectedMusic.value.title,
-                          artist: selectedMusic.value.artist,
-                          url: selectedMusic.value.url,
-                      }
+                        title: selectedMusic.value.title,
+                        artist: selectedMusic.value.artist,
+                        url: selectedMusic.value.url,
+                    }
                     : null,
-                sourceVideos: selectedVideos.value.map(video => ({
+                sourceVideos: selectedVideos.value.map((video) => ({
                     url: video.videos.large.url,
                     thumbnail: video.thumbnail,
                 })),
@@ -341,9 +340,7 @@
                 text: text.value,
                 language: language.value,
                 voice: voice.value,
-                videos: selectedVideos.value.map(
-                    video => video.videos.large.url
-                ),
+                videos: selectedVideos.value.map((video) => video.videos.large.url),
                 backgroundMusic: selectedMusic.value?.url,
             };
 
@@ -369,7 +366,7 @@
                 if (done) break;
 
                 const text = decoder.decode(value);
-                const lines = text.split('\n').filter(line => line.trim());
+                const lines = text.split('\n').filter((line) => line.trim());
 
                 for (const line of lines) {
                     try {

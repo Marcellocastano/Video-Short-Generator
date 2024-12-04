@@ -1,9 +1,9 @@
-import { defineStore } from 'pinia';
-import axios from 'axios';
+import { defineStore } from "pinia";
+import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
-export const useVideoStore = defineStore('video', {
+export const useVideoStore = defineStore("video", {
     state: () => ({
         videos: [],
         loading: false,
@@ -21,7 +21,7 @@ export const useVideoStore = defineStore('video', {
                 this.videos = response.data.videos;
             } catch (error) {
                 this.error = error.message;
-                console.error('Error searching videos:', error);
+                console.error("Error searching videos:", error);
             } finally {
                 this.loading = false;
             }
@@ -32,12 +32,12 @@ export const useVideoStore = defineStore('video', {
             try {
                 const response = await axios.post(
                     `${API_URL}/videos/generate`,
-                    params
+                    params,
                 );
                 this.generatedVideo = response.data;
             } catch (error) {
                 this.error = error.message;
-                console.error('Error generating video:', error);
+                console.error("Error generating video:", error);
             } finally {
                 this.loading = false;
             }
