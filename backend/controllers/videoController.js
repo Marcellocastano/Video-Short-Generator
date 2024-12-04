@@ -1,6 +1,7 @@
 import videoQueueService from '../services/videoQueueService.js';
 import fs from 'fs/promises';
 import path from 'path';
+import { videosDir, getVideoUrl } from '../utils/paths.js';
 
 class VideoController {
     // CREATE - Salva un nuovo video
@@ -37,19 +38,18 @@ class VideoController {
             }
 
             // Crea la directory permanente se non esiste
-            const permanentDir = path.join(process.cwd(), 'uploads', 'videos');
-            await fs.mkdir(permanentDir, { recursive: true });
+            await fs.mkdir(videosDir, { recursive: true });
 
             // Genera un nome file unico
             const fileExtension = path.extname(req.file.originalname);
             const uniqueFilename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${fileExtension}`;
-            const permanentPath = path.join(permanentDir, uniqueFilename);
+            const permanentPath = path.join(videosDir, uniqueFilename);
 
             // Copia il file nella directory permanente
             await fs.copyFile(req.file.path, permanentPath);
 
             // Salva il percorso relativo nel database
-            const relativeFilePath = `/uploads/videos/${uniqueFilename}`;
+            const relativeFilePath = getVideoUrl(uniqueFilename);
 
             const videoData = {
                 title: req.body.title,
@@ -100,7 +100,7 @@ class VideoController {
 
                 // Se il percorso non inizia con /uploads, aggiungi il prefisso
                 if (!filePath.startsWith('/uploads')) {
-                    filePath = `/uploads/videos/${path.basename(filePath)}`;
+                    filePath = getVideoUrl(path.basename(filePath));
                 }
 
                 return {
@@ -139,7 +139,7 @@ class VideoController {
             // Assicurati che il percorso del file sia relativo a /uploads
             const filePath = video.file_path.startsWith('/uploads')
                 ? video.file_path
-                : `/uploads/videos/${path.basename(video.file_path)}`;
+                : getVideoUrl(path.basename(video.file_path));
 
             res.json({
                 success: true,
@@ -236,8 +236,12 @@ class VideoController {
 
             // Elimina il file fisico
             if (video.file_path) {
+                const filePath = path.join(
+                    videosDir,
+                    path.basename(video.file_path)
+                );
                 await fs
-                    .unlink(video.file_path)
+                    .unlink(filePath)
                     .catch(err =>
                         console.error("Errore nell'eliminazione del file:", err)
                     );
@@ -277,7 +281,10 @@ class VideoController {
                 });
             }
 
-            const filePath = video.file_path;
+            const filePath = path.join(
+                videosDir,
+                path.basename(video.file_path)
+            );
             const stat = await fs.stat(filePath);
             const fileSize = stat.size;
             const range = req.headers.range;

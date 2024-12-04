@@ -1,18 +1,19 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
 import videoRoutes from './routes/videoRoutes.js';
 import videosRouter from './routes/videos.js';
 import musicRouter from './routes/music.js';
+import { uploadsDir, videosDir } from './utils/paths.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load environment variables
-dotenv.config({ path: path.join(path.dirname(__dirname), '.env') });
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const app = express();
 
@@ -35,14 +36,17 @@ app.use((req, res, next) => {
     next();
 });
 
-// Configurazione directory uploads
-const uploadsPath = path.join(__dirname, '../uploads');
-
-// Verifica directory uploads
+// Verifica e crea le directory necessarie
 try {
-    await fs.access(uploadsPath);
+    await fs.access(uploadsDir);
 } catch (error) {
-    await fs.mkdir(uploadsPath, { recursive: true });
+    await fs.mkdir(uploadsDir, { recursive: true });
+}
+
+try {
+    await fs.access(videosDir);
+} catch (error) {
+    await fs.mkdir(videosDir, { recursive: true });
 }
 
 // Middleware per file statici
@@ -55,7 +59,7 @@ app.use('/uploads', (req, res, next) => {
 
 app.use(
     '/uploads',
-    express.static(uploadsPath, {
+    express.static(uploadsDir, {
         setHeaders: (res, path, stat) => {
             res.removeHeader('Content-Security-Policy');
             res.set({
@@ -63,7 +67,6 @@ app.use(
                 'Access-Control-Allow-Methods': 'GET, OPTIONS',
                 'Access-Control-Allow-Headers': 'Range',
                 'Accept-Ranges': 'bytes',
-                'Content-Type': 'video/mp4',
             });
         },
     })

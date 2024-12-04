@@ -11,6 +11,7 @@ import subtitleService from '../services/subtitleService.js';
 import videoMashupService from '../services/videoMashupService.js';
 import videoController from '../controllers/videoController.js';
 import { validateVideo } from '../middleware/validators.js';
+import { videosDir, getVideoUrl } from '../utils/paths.js';
 import {
     videoUpload,
     handleUploadErrors,
@@ -182,29 +183,21 @@ router.post('/generate', async (req, res) => {
         );
 
         // Crea la directory permanente se non esiste
-        const permanentDir = path.join(__dirname, '../uploads/videos');
-        await fs.promises.mkdir(permanentDir, { recursive: true });
+        await fs.promises.mkdir(videosDir, { recursive: true });
 
         // Copia il video nella directory permanente
-        const permanentPath = path.join(
-            permanentDir,
-            `${Date.now()}-final.mp4`
-        );
+        const filename = `${Date.now()}-final.mp4`;
+        const permanentPath = path.join(videosDir, filename);
         await fs.promises.copyFile(outputPath, permanentPath);
 
-        // Crea un URL per il video usando il percorso permanente
-        const baseUrl = `http://localhost:${process.env.PORT || 3000}`;
-        const videoUrl = `${baseUrl}/uploads/videos/${path.basename(permanentPath)}`;
+        // Invia solo il percorso relativo del file
+        const videoUrl = getVideoUrl(filename);
 
         console.log('Video file generated successfully at:', permanentPath);
         console.log('File size:', fs.statSync(permanentPath).size, 'bytes');
         console.log('Video URL:', videoUrl);
 
-        // Assicura i permessi corretti per il file
-        fs.chmodSync(permanentPath, 0o644);
-
-        sendProgress(100, 'Completato!');
-        // Invia l'URL del video
+        sendProgress(100, 'Video completato!');
         res.write(JSON.stringify({ videoUrl }) + '\n');
         res.end();
 
