@@ -120,10 +120,30 @@ router.post('/generate', async (req, res) => {
         sendProgress(20, 'Download musica di sottofondo...');
         let backgroundMusicPath = null;
         if (backgroundMusic) {
-            backgroundMusicPath = path.join(workingDir, 'background_music.mp3');
-            const musicResponse = await fetch(backgroundMusic);
-            const musicBuffer = await musicResponse.buffer();
-            fs.writeFileSync(backgroundMusicPath, musicBuffer);
+            try {
+                console.log(
+                    'Downloading background music from:',
+                    backgroundMusic
+                );
+                backgroundMusicPath = path.join(
+                    workingDir,
+                    'background_music.mp3'
+                );
+                const musicResponse = await fetch(backgroundMusic);
+
+                if (!musicResponse.ok) {
+                    throw new Error(
+                        `Failed to download music: ${musicResponse.statusText}`
+                    );
+                }
+
+                const musicBuffer = await musicResponse.buffer();
+                fs.writeFileSync(backgroundMusicPath, musicBuffer);
+                console.log('Background music downloaded successfully');
+            } catch (error) {
+                console.error('Error downloading background music:', error);
+                backgroundMusicPath = null; // Reset if download fails
+            }
         }
 
         sendProgress(30, 'Normalizzazione audio...');
@@ -139,20 +159,30 @@ router.post('/generate', async (req, res) => {
         // If we have background music, mix it with the speech
         const finalAudioPath = path.join(workingDir, 'final_audio.wav');
         if (backgroundMusicPath) {
-            sendProgress(40, 'Mixaggio audio...');
-            // First normalize and loop the background music to match speech duration
-            const normalizedMusicPath = path.join(
-                workingDir,
-                'normalized_music.wav'
-            );
-            await execAsync(
-                `${process.env.FFMPEG_PATH} -i "${backgroundMusicPath}" -af "volume=0.5" -ar 44100 -ac 2 "${normalizedMusicPath}"`
-            );
+            try {
+                sendProgress(40, 'Mixaggio audio...');
+                console.log('Normalizing and mixing background music...');
 
-            // Mix speech with background music
-            await execAsync(
-                `${process.env.FFMPEG_PATH} -i "${normalizedSpeechPath}" -i "${normalizedMusicPath}" -filter_complex "[1:a]aloop=loop=-1:size=2e+09[loop];[loop]apad=whole_dur=${audioDuration}[music];[0:a][music]amix=inputs=2:duration=first:weights=1 0.5[a]" -map "[a]" "${finalAudioPath}"`
-            );
+                // First normalize and loop the background music to match speech duration
+                const normalizedMusicPath = path.join(
+                    workingDir,
+                    'normalized_music.wav'
+                );
+                await execAsync(
+                    `${process.env.FFMPEG_PATH} -i "${backgroundMusicPath}" -af "volume=0.5" -ar 44100 -ac 2 "${normalizedMusicPath}"`
+                );
+
+                // Mix speech with background music
+                const mixCommand = `${process.env.FFMPEG_PATH} -i "${normalizedSpeechPath}" -i "${normalizedMusicPath}" -filter_complex "[1:a]aloop=loop=-1:size=2e+09[loop];[loop]apad=whole_dur=${audioDuration}[music];[0:a][music]amix=inputs=2:duration=first:weights=1 0.5[a]" -map "[a]" "${finalAudioPath}"`;
+                console.log('Executing mix command:', mixCommand);
+                await execAsync(mixCommand);
+
+                console.log('Audio mixing completed successfully');
+            } catch (error) {
+                console.error('Error mixing audio:', error);
+                // If mixing fails, use only the speech audio
+                fs.copyFileSync(normalizedSpeechPath, finalAudioPath);
+            }
         } else {
             // If no background music, just use the normalized speech
             fs.copyFileSync(normalizedSpeechPath, finalAudioPath);

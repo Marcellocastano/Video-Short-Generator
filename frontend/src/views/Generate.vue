@@ -210,8 +210,9 @@
         selectedMusic.value = {
             title: music.title,
             artist: music.artist,
-            url: music.audio, // Modificato da music.url a music.audio
+            url: music.audiodownload || music.audio || music.preview_url, // Aggiungiamo più opzioni per l'URL
         };
+        console.log('Selected music:', selectedMusic.value); // Aggiungiamo log per debug
         showMusicModal.value = false;
     };
 

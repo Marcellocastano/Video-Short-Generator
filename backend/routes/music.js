@@ -21,7 +21,6 @@ router.get('/search', async (req, res) => {
         }
 
         // Jamendo API endpoint for track search
-        // Docs: https://developer.jamendo.com/v3.0/tracks
         const apiUrl =
             `https://api.jamendo.com/v3.0/tracks/?` +
             new URLSearchParams({
@@ -31,7 +30,7 @@ router.get('/search', async (req, res) => {
                 namesearch: query,
                 include: 'musicinfo',
                 audioformat: 'mp32',
-                speed: 'medium', // Valori corretti per la velocità
+                speed: 'medium',
                 boost: 'popularity_month',
                 groupby: 'artist_id',
             });
@@ -52,28 +51,19 @@ router.get('/search', async (req, res) => {
             });
         }
 
-        console.log('API Response headers:', data.headers);
-        console.log('Results count:', data.results?.length || 0);
-
-        if (!data.results) {
-            console.error('Invalid API response:', data);
-            return res.status(500).json({ error: 'Invalid API response' });
-        }
-
-        // Map the response to our format
-        const tracks = data.results.map(track => ({
+        // Map the results to include all necessary fields
+        const mappedResults = data.results.map(track => ({
             id: track.id,
             title: track.name,
             artist: track.artist_name,
-            duration: Math.floor(track.duration || 0),
-            preview_url: track.audio,
-            download_url: track.audio,
-            tags: track.tags?.join(', ') || '',
-            license: track.license_ccurl,
+            duration: track.duration,
+            preview_url: track.audio, // URL per l'anteprima
+            audiodownload: track.audiodownload, // URL per il download completo
+            audio: track.audio, // URL alternativo
         }));
 
-        console.log('Processed tracks:', tracks.length);
-        res.json(tracks);
+        console.log('Found tracks:', mappedResults.length);
+        res.json(mappedResults);
     } catch (error) {
         console.error('Error searching music:', error);
         res.status(500).json({ error: 'Failed to search music' });
