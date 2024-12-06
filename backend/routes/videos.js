@@ -12,6 +12,7 @@ import videoMashupService from '../services/videoMashupService.js';
 import videoController from '../controllers/videoController.js';
 import { validateVideo } from '../middleware/validators.js';
 import { videosDir, getVideoUrl } from '../utils/paths.js';
+import videoService from '../services/videoService.js';
 import {
     videoUpload,
     handleUploadErrors,
@@ -37,7 +38,7 @@ router.post(
 // Rotta per ottenere tutti i video
 router.get('/', videoController.getAllVideos);
 
-// Search videos from Pixabay
+// Search videos from multiple sources (Pixabay and Pexels)
 router.get('/search', async (req, res) => {
     try {
         const { query } = req.query;
@@ -47,30 +48,17 @@ router.get('/search', async (req, res) => {
                 .json({ error: 'Query parameter is required' });
         }
 
-        const apiKey = process.env.PIXABAY_API_KEY;
-        const apiUrl = `https://pixabay.com/api/videos/?key=${apiKey}&q=${encodeURIComponent(query)}&per_page=10`;
-
-        console.log(
-            'Searching videos with URL:',
-            apiUrl.replace(apiKey, '***')
-        );
-
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-
-        // Map the response to include only necessary data
-        const videos = data.hits.map(video => ({
-            id: video.id,
-            duration: video.duration,
-            tags: video.tags,
-            preview: video.videos.tiny.url,
-            videos: video.videos,
-        }));
+        console.log('Searching videos for query:', query);
+        const videos = await videoService.searchVideos(query);
+        console.log(`Found ${videos.length} videos in total`);
 
         res.json(videos);
     } catch (error) {
         console.error('Error searching videos:', error);
-        res.status(500).json({ error: 'Failed to search videos' });
+        res.status(500).json({
+            error: 'Failed to search videos',
+            details: error.message,
+        });
     }
 });
 

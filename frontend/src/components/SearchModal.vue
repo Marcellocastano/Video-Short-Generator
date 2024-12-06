@@ -16,12 +16,19 @@
                 >
                     <div class="video-preview">
                         <video
+                            v-if="video.source === 'pixabay'"
                             :src="video.preview"
                             loop
                             muted
                             @mouseover="playVideo($event.target)"
                             @mouseout="pauseVideo($event.target)"
                         ></video>
+                        <img
+                            v-else
+                            :src="video.preview || video.videos.tiny.url"
+                            class="video-thumbnail"
+                            :alt="'Preview for video ' + video.id"
+                        />
                         <div v-if="isSelected(video)" class="check-icon">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"

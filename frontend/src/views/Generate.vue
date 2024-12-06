@@ -6,36 +6,41 @@
         <main class="main-container">
             <div class="glass-container">
                 <div class="content">
-                    <VideoSelector
-                        ref="videoSelector"
-                        v-model="selectedVideos"
-                        @update:modelValue="updateSelectedVideos"
-                    />
+                    <div class="flex-container">
+                        <VideoSelector
+                            ref="videoSelector"
+                            v-model="selectedVideos"
+                            @update:modelValue="updateSelectedVideos"
+                        />
 
-                    <!-- Music Search Input -->
-                    <div class="music-search">
-                        <div class="search-container">
-                            <input
-                                v-model="musicSearchQuery"
-                                @keyup.enter="searchMusic"
-                                type="text"
-                                class="glass-input"
-                                placeholder="Cerca musica di sottofondo..."
-                            />
-                            <button
-                                @click="searchMusic"
-                                class="glass-button"
-                                :disabled="!musicSearchQuery.trim()"
+                        <!-- Music Search Input -->
+                        <div class="music-search">
+                            <div class="search-container">
+                                <input
+                                    v-model="musicSearchQuery"
+                                    @keyup.enter="searchMusic"
+                                    type="text"
+                                    class="glass-input"
+                                    placeholder="Cerca musica di sottofondo..."
+                                />
+                                <button
+                                    @click="searchMusic"
+                                    class="glass-button"
+                                    :disabled="!musicSearchQuery.trim()"
+                                >
+                                    Cerca
+                                </button>
+                            </div>
+
+                            <div
+                                v-if="selectedMusic"
+                                class="selected-music-info"
                             >
-                                Cerca Musica
-                            </button>
-                        </div>
-
-                        <div v-if="selectedMusic" class="selected-music-info">
-                            <span>{{ selectedMusic.title }}</span>
-                            <span style="opacity: 0.7">{{
-                                selectedMusic.artist
-                            }}</span>
+                                <span>{{ selectedMusic.title }}</span>
+                                <span style="opacity: 0.7">{{
+                                    selectedMusic.artist
+                                }}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -282,7 +287,7 @@
                       }
                     : null,
                 sourceVideos: selectedVideos.value.map(video => ({
-                    url: video.videos.large.url,
+                    url: video.videos.medium.url,
                     thumbnail: video.thumbnail,
                 })),
             };
@@ -343,7 +348,7 @@
                 language: language.value,
                 voice: voice.value,
                 videos: selectedVideos.value.map(
-                    video => video.videos.large.url
+                    video => video.videos.medium.url
                 ),
                 backgroundMusic: selectedMusic.value?.url,
             };

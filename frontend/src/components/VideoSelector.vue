@@ -20,7 +20,6 @@
 
         <!-- Selected Videos Preview -->
         <div v-if="selectedVideos.length > 0" class="selected-videos-preview">
-            <h3 class="preview-title">Video Selezionati</h3>
             <div class="selected-videos-grid">
                 <div
                     v-for="video in selectedVideos"
@@ -28,19 +27,28 @@
                     class="selected-video-item"
                 >
                     <div class="video-preview-container">
-                        <video
-                            :src="video.preview"
-                            loop
-                            muted
-                            class="video-thumbnail"
-                            @mouseover="e => e.target.play()"
-                            @mouseleave="
-                                e => {
-                                    e.target.pause();
-                                    e.target.currentTime = 0;
-                                }
-                            "
-                        ></video>
+                        <div v-if="video.source === 'pixabay'">
+                            <video
+                                :src="video.videos.tiny.url"
+                                loop
+                                muted
+                                class="video-thumbnail"
+                                @mouseover="e => e.target.play()"
+                                @mouseleave="
+                                    e => {
+                                        e.target.pause();
+                                        e.target.currentTime = 0;
+                                    }
+                                "
+                            ></video>
+                        </div>
+                        <div v-else>
+                            <img
+                                :src="video.preview || video.videos.tiny.url"
+                                class="video-thumbnail"
+                                :alt="'Preview for video ' + video.id"
+                            />
+                        </div>
                         <button
                             @click="removeVideo(video)"
                             class="remove-video-button"
@@ -48,6 +56,11 @@
                         >
                             ×
                         </button>
+                        <span
+                            v-if="video.source"
+                            :class="`video-source-badge ${video.source}`"
+                            >{{ video.source }}</span
+                        >
                     </div>
                     <div class="video-duration">
                         {{ formatDuration(video.duration) }}
@@ -73,6 +86,11 @@
             default: () => [],
         },
     });
+
+    function isImageUrl(url) {
+        console.log(url?.match(/\.(jpg|jpeg|png|gif|webp)$/i));
+        return url?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+    }
 
     watch(
         () => props.modelValue,
@@ -138,7 +156,7 @@
         flex-direction: column;
         align-items: center;
         gap: 1rem;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
     }
 
     .search-bar {
@@ -195,77 +213,92 @@
     }
 
     .selected-videos-preview {
-        margin: 1.5rem 0;
-        padding: 1rem;
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 1rem;
-        backdrop-filter: blur(30px);
-        -webkit-backdrop-filter: blur(30px);
-    }
-
-    .preview-title {
-        font-size: 1.1rem;
-        color: var(--text-color);
-        margin-bottom: 1rem;
+        margin: 1rem 0;
     }
 
     .selected-videos-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 1rem;
     }
 
     .selected-video-item {
         position: relative;
-        border-radius: 0.5rem;
+        border-radius: 12px;
         overflow: hidden;
-        background: rgba(0, 0, 0, 0.1);
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
     }
 
     .video-preview-container {
         position: relative;
-        aspect-ratio: 9/16;
+        width: 100%;
+        padding-top: 56.25%;
+        overflow: hidden;
     }
 
     .video-thumbnail {
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
-        border-radius: 0.5rem;
     }
 
     .remove-video-button {
         position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
+        top: 8px;
+        right: 8px;
         width: 24px;
         height: 24px;
         border-radius: 50%;
-        background: rgba(0, 0, 0, 0.6);
+        background: rgba(255, 0, 0, 0.8);
         color: white;
         border: none;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
-        transition: all 0.2s ease;
+        font-size: 16px;
+        transition: all 0.3s ease;
     }
 
     .remove-video-button:hover {
-        background: rgba(255, 0, 0, 0.8);
+        background: rgba(255, 0, 0, 1);
         transform: scale(1.1);
     }
 
     .video-duration {
         position: absolute;
-        bottom: 0.5rem;
-        right: 0.5rem;
-        padding: 0.2rem 0.5rem;
+        bottom: 8px;
+        right: 8px;
+        padding: 2px 6px;
         background: rgba(0, 0, 0, 0.6);
         color: white;
-        border-radius: 0.25rem;
-        font-size: 0.8rem;
+        border-radius: 4px;
+        font-size: 0.8em;
+    }
+
+    .video-source-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        color: white;
+        background-color: rgba(0, 0, 0, 0.6);
+        text-transform: capitalize;
+    }
+
+    .video-source-badge.pixabay {
+        background-color: rgba(58, 177, 155, 0.8);
+    }
+
+    .video-source-badge.pexels {
+        background-color: rgba(5, 255, 161, 0.8);
     }
 </style>

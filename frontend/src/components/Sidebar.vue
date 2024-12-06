@@ -14,7 +14,7 @@
                 :title="isCollapsed ? 'Genera Video' : ''"
             >
                 <i class="fas fa-video"></i>
-                <span v-if="!isCollapsed">Genera Video</span>
+                <span v-if="!isCollapsed">Genera</span>
             </router-link>
 
             <router-link
@@ -23,7 +23,7 @@
                 :title="isCollapsed ? 'Raccolta Video' : ''"
             >
                 <i class="fas fa-film"></i>
-                <span v-if="!isCollapsed">Raccolta Video</span>
+                <span v-if="!isCollapsed">Raccolta</span>
             </router-link>
         </nav>
     </div>
@@ -51,15 +51,20 @@
         left: 0;
         top: 0;
         height: 100vh;
-        background: rgba(40, 44, 52, 0.7);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         color: white;
         width: var(--sidebar-width);
-        transition: all 0.3s ease;
         z-index: 1000;
         box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
         border-right: 1px solid rgba(255, 255, 255, 0.18);
+        background: linear-gradient(
+            135deg,
+            var(--gradient-start),
+            var(--gradient-middle),
+            var(--gradient-end)
+        );
+        transition: all 0.3s ease;
     }
 
     .sidebar.collapsed {
@@ -68,13 +73,13 @@
 
     .toggle-btn {
         position: absolute;
-        right: -12px;
+        right: -20px;
         top: 20px;
-        background: rgba(40, 44, 52, 0.9);
+        background: #f0f0f0e6;
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
-        width: 24px;
-        height: 24px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -93,7 +98,7 @@
     .menu-item {
         display: flex;
         align-items: center;
-        padding: 15px 20px;
+        padding: 30px 30px;
         color: rgba(255, 255, 255, 0.9);
         text-decoration: none;
         transition: all 0.3s ease;
@@ -115,6 +120,12 @@
         text-align: center;
         margin-right: 15px;
         opacity: 0.9;
+        color: #092862;
+    }
+
+    .menu-item span {
+        color: #092862;
+        font-size: 18px;
     }
 
     .collapsed .menu-item i {
