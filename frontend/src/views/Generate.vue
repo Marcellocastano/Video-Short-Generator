@@ -13,7 +13,6 @@
                                 type="text"
                                 class="glass-input"
                                 placeholder="Titolo del video"
-                                @input="updateVideoInfo"
                             />
                         </div>
                         <div class="form-group">
@@ -22,7 +21,6 @@
                                 class="glass-input"
                                 placeholder="Descrizione del video"
                                 rows="3"
-                                @input="updateVideoInfo"
                             ></textarea>
                         </div>
 
@@ -64,7 +62,7 @@
                             </div>
                         </div>
 
-                        <div class="text-input">
+                        <div class="text-input search-container">
                             <textarea
                                 v-model="text"
                                 class="glass-input"
@@ -73,7 +71,7 @@
                             ></textarea>
                         </div>
 
-                        <div class="voice-options">
+                        <!-- <div class="voice-options">
                             <div class="options-grid">
                                 <div class="option">
                                     <select
@@ -94,17 +92,19 @@
                                     </select>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
 
                         <div v-if="error" class="error">{{ error }}</div>
 
-                        <button
-                            @click="generateVideo"
-                            class="glass-button generate-button"
-                            :disabled="!canGenerate || generating"
-                        >
-                            {{ generating ? 'Creazione...' : 'Crea' }}
-                        </button>
+                        <div class="center-container">
+                            <button
+                                @click="generateVideo"
+                                class="glass-button generate-button"
+                                :disabled="!canGenerate || generating"
+                            >
+                                {{ generating ? 'Creazione...' : 'Crea' }}
+                            </button>
+                        </div>
 
                         <div v-if="generating" class="generation-progress">
                             <div class="progress-bar">
@@ -117,41 +117,32 @@
                                 {{ generationStep }}
                             </div>
                         </div>
-
-                        <!-- Sezione Video Generato -->
-                        <div
-                            v-if="generatedVideoUrl"
-                            class="generated-video-section"
-                        >
-                            <h3>Video Generato</h3>
-                            <div class="video-preview">
-                                <video
-                                    :src="generatedVideoUrl"
-                                    controls
-                                    class="preview-player"
-                                >
-                                    Il tuo browser non supporta il tag video.
-                                </video>
-                            </div>
-                            <div class="download-section">
-                                <button
-                                    @click="downloadVideo(generatedVideoUrl)"
-                                    class="glass-button download-button"
-                                >
-                                    Scarica Video
-                                </button>
-                                <button
-                                    @click="saveVideoToDb"
-                                    class="glass-button save-button"
-                                    :disabled="saving"
-                                >
-                                    {{
-                                        saving
-                                            ? 'Salvataggio...'
-                                            : 'Salva in Raccolta'
-                                    }}
-                                </button>
-                            </div>
+                    </div>
+                    <div class="generated-video-section">
+                        <div class="video-preview">
+                            <video
+                                :src="generatedVideoUrl"
+                                controls
+                                class="preview-player"
+                            >
+                                Il tuo browser non supporta il tag video.
+                            </video>
+                        </div>
+                        <div class="download-section">
+                            <button
+                                @click="downloadVideo(generatedVideoUrl)"
+                                class="glass-button download-button"
+                                :disabled="!generatedVideoUrl"
+                            >
+                                Scarica
+                            </button>
+                            <button
+                                @click="saveVideoToDb"
+                                class="glass-button save-button"
+                                :disabled="saving || !generatedVideoUrl"
+                            >
+                                {{ saving ? 'Salvataggio...' : 'Salva' }}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -438,11 +429,6 @@
             generating.value = false;
         }
     };
-
-    const updateVideoInfo = () => {
-        console.log('Video title:', videoTitle.value);
-        console.log('Video description:', videoDescription.value);
-    };
 </script>
 
 <style scoped>
@@ -493,36 +479,6 @@
         min-height: 80px;
     }
 
-    /* Stili per la sezione del video generato */
-    .generated-video-section {
-        margin-top: 2rem;
-        padding: 1.5rem;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .generated-video-section h3 {
-        color: var(--text-color);
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
-    }
-
-    .video-preview {
-        width: 100%;
-        margin-bottom: 1rem;
-        border-radius: 0.5rem;
-        overflow: hidden;
-    }
-
-    .preview-player {
-        width: 100%;
-        max-height: 400px;
-        object-fit: contain;
-        background: rgba(0, 0, 0, 0.2);
-    }
-
     .download-section {
         display: flex;
         justify-content: center;
@@ -551,6 +507,7 @@
         background: rgba(var(--accent-color-rgb), 0.2);
     }
 
+    .download-button:disabled,
     .save-button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
