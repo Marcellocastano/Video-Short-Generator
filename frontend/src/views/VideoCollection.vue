@@ -34,6 +34,7 @@
                 </div>
                 <div class="video-info">
                     <h3>{{ video.title || 'Video senza titolo' }}</h3>
+                    <p>{{ video.description || 'Nessuna descrizione' }}</p>
                     <div class="video-metadata">
                         <span
                             ><i class="fas fa-calendar"></i>
@@ -197,10 +198,10 @@
     }
 
     .video-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        display: flex;
         gap: 20px;
         margin-top: 20px;
+        flex-wrap: wrap;
     }
 
     .video-card {
@@ -212,6 +213,7 @@
         box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.18);
         transition: transform 0.2s ease;
+        width: 250px;
     }
 
     .video-card:hover {
