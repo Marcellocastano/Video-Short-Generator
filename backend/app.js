@@ -8,6 +8,8 @@ import videoRoutes from './routes/videoRoutes.js';
 import videosRouter from './routes/videos.js';
 import musicRouter from './routes/music.js';
 import { uploadsDir, videosDir } from './utils/paths.js';
+import publishRoutes from './routes/publish.js';
+import authRoutes from './routes/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,6 +31,9 @@ app.use(
 );
 
 app.use(express.json());
+
+app.use('/api', publishRoutes);
+app.use('/api', authRoutes);
 
 // Rimuovi CSP per i file statici
 app.use((req, res, next) => {

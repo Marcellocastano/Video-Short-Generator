@@ -24,6 +24,12 @@
                                 <i class="fas fa-info-circle"></i> Info
                             </button>
                             <button
+                                v-if="!isPublished(video)"
+                                @click="showPublishModal(video)"
+                            >
+                                <i class="fab fa-youtube"></i> Pubblica
+                            </button>
+                            <button
                                 class="delete-btn"
                                 @click="showDeleteConfirm(video)"
                             >
@@ -79,6 +85,12 @@
             v-model:show="showInfoModal"
             :video-id="selectedVideo?.id"
         />
+
+        <PublishModal
+            v-model="isPublishModalVisible"
+            :video="selectedVideo"
+            @publish="handlePublish"
+        />
     </div>
 </template>
 
@@ -87,6 +99,7 @@
     import DeleteVideoModal from '../components/DeleteVideoModal.vue';
     import VideoInfoModal from '../components/VideoInfoModal.vue';
     import VideoPlayer from '../components/VideoPlayer.vue';
+    import PublishModal from '../components/PublishModal.vue';
 
     export default {
         name: 'VideoCollection',
@@ -94,18 +107,20 @@
             DeleteVideoModal,
             VideoInfoModal,
             VideoPlayer,
+            PublishModal,
         },
         data() {
             return {
                 videos: [],
+                activeMenu: null,
+                isPublishModalVisible: false,
+                selectedVideo: null,
+                showDeleteModal: false,
+                showInfoModal: false,
                 currentPage: 1,
                 totalPages: 1,
                 pageSize: 8,
                 totalVideos: 0,
-                activeMenu: null,
-                showDeleteModal: false,
-                showInfoModal: false,
-                selectedVideo: null,
                 baseUrl: 'http://localhost:3000', // URL base senza /api
             };
         },
@@ -151,6 +166,37 @@
                 this.selectedVideo = video;
                 this.showInfoModal = true;
                 this.activeMenu = null;
+            },
+            showPublishModal(video) {
+                this.selectedVideo = video;
+                this.isPublishModalVisible = true;
+            },
+            async handlePublish(publishData) {
+                try {
+                    const response = await fetch(
+                        `${this.baseUrl}/api/videos/${publishData.videoId}/publish`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(publishData),
+                        }
+                    );
+
+                    if (!response.ok) {
+                        throw new Error('Failed to publish video');
+                    }
+
+                    // Aggiorna la lista dei video
+                    await this.fetchVideos();
+                } catch (error) {
+                    console.error('Error publishing video:', error);
+                    // TODO: Mostrare un messaggio di errore all'utente
+                }
+            },
+            isPublished(video) {
+                return video.publish_status === 'published';
             },
             showDeleteConfirm(video) {
                 this.selectedVideo = video;
