@@ -39,7 +39,16 @@
                     </div>
                 </div>
                 <div class="video-info">
-                    <h3>{{ video.title || 'Video senza titolo' }}</h3>
+                    <div class="video-header">
+                        <h3>{{ video.title || 'Video senza titolo' }}</h3>
+                        <div
+                            class="status-tag"
+                            :class="getStatusClass(video)"
+                            :data-tooltip="getStatusTooltip(video)"
+                        >
+                            {{ getStatusText(video) }}
+                        </div>
+                    </div>
                     <p>{{ video.description || 'Nessuna descrizione' }}</p>
                     <div class="video-metadata">
                         <span
@@ -223,6 +232,36 @@
                 this.currentPage = page;
                 await this.fetchVideos();
             },
+            getStatusClass(video) {
+                switch (video.publish_status) {
+                    case 'published':
+                        return 'published';
+                    case 'scheduled':
+                        return 'scheduled';
+                    case 'draft':
+                        return 'unpublished';
+                    default:
+                        return 'unpublished';
+                }
+            },
+            getStatusText(video) {
+                switch (video.publish_status) {
+                    case 'published':
+                        return 'Pubblicato';
+                    case 'scheduled':
+                        return 'Programmato';
+                    case 'draft':
+                        return 'Non pubblicato';
+                    default:
+                        return 'Non pubblicato';
+                }
+            },
+            getStatusTooltip(video) {
+                if (video.publish_status === 'scheduled' && video.publish_at) {
+                    return `Programmato per: ${this.formatDate(video.publish_at)}`;
+                }
+                return '';
+            },
         },
         mounted() {
             this.fetchVideos();
@@ -328,10 +367,64 @@
         padding: 15px;
     }
 
-    .video-info h3 {
-        margin: 0 0 10px 0;
-        font-size: 1.1em;
-        color: var(--text-color);
+    .video-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+    }
+
+    .video-header h3 {
+        margin: 0;
+        flex: 1;
+    }
+
+    .status-tag {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        min-width: 90px;
+        text-align: center;
+        position: relative;
+    }
+
+    .status-tag[data-tooltip]:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        top: -30px;
+        right: 0;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        z-index: 10;
+    }
+
+    .status-tag[data-tooltip]:hover::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        right: 15px;
+        border: 5px solid transparent;
+        border-top-color: rgba(0, 0, 0, 0.8);
+    }
+
+    .status-tag.published {
+        background-color: #4caf50;
+        color: white;
+    }
+
+    .status-tag.scheduled {
+        background-color: #ffc107;
+        color: black;
+    }
+
+    .status-tag.unpublished {
+        background-color: #f44336;
+        color: white;
     }
 
     .video-metadata {
