@@ -158,86 +158,73 @@
 </script>
 
 <style scoped>
-    .music-selector {
-        width: 100%;
-    }
-
     .modal-overlay {
         position: fixed;
         top: 0;
         left: 0;
-        width: 100vw;
-        height: 100vh;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(8px);
         display: flex;
         justify-content: center;
         align-items: center;
-        z-index: 9999;
+        z-index: 1000;
     }
 
     .modal-content {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(128, 128, 128, 0.4);
-        backdrop-filter: blur(30px);
-        -webkit-backdrop-filter: blur(30px);
-        border: 1px solid var(--glass-border);
-        border-radius: 30px;
-        width: 95vw;
-        max-width: 1600px;
-        max-height: 90vh;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        width: 90%;
+        max-width: 800px;
+        max-height: 80vh;
         overflow-y: auto;
-        padding: 2rem;
-        box-shadow:
-            0 8px 32px -4px var(--glass-shadow),
-            inset 0 2px 0 0 var(--glass-highlight);
+        padding: 1rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     }
 
     .music-grid {
         display: grid;
-        grid-template-columns: repeat(4, 250px);
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 1rem;
-        margin-bottom: 1.5rem;
-        padding: 1rem;
-        justify-content: center;
+        margin-bottom: 1rem;
     }
 
     .music-card {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
         padding: 1rem;
-        border-radius: 1rem;
         cursor: pointer;
-        transition: all 0.3s ease;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.2s;
     }
 
     .music-card:hover {
+        background: rgba(255, 255, 255, 0.2);
         transform: translateY(-2px);
-        background: rgba(255, 255, 255, 0.1);
     }
 
     .music-card.selected {
-        background: rgba(var(--accent-color-rgb), 0.2);
-        border: 1px solid var(--accent-color);
-        transform: scale(1.02);
-        box-shadow: 0 4px 20px rgba(var(--accent-color-rgb), 0.3);
+        background: rgba(var(--accent-color-rgb), 0.3);
+        border-color: rgba(var(--accent-color-rgb), 0.5);
     }
 
     .music-info {
+        color: white;
         margin-bottom: 0.5rem;
     }
 
     .music-title {
-        font-weight: 600;
+        font-size: 1.1rem;
+        font-weight: 500;
         margin-bottom: 0.25rem;
-        color: var(--text-color);
     }
 
     .music-artist {
         font-size: 0.9rem;
         opacity: 0.8;
-        color: var(--text-color);
     }
 
     .audio-container {
@@ -248,14 +235,13 @@
     .audio-preview {
         width: 100%;
         height: 32px;
-        border-radius: 16px;
+        filter: opacity(0.7);
     }
 
     .music-duration {
         font-size: 0.9rem;
-        opacity: 0.8;
+        color: rgba(255, 255, 255, 0.8);
         text-align: right;
-        color: var(--text-color);
     }
 
     .pagination {
@@ -263,18 +249,23 @@
         justify-content: center;
         align-items: center;
         gap: 1rem;
-        margin-top: 1.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .page-button {
-        padding: 0.5rem 1rem;
-        font-size: 1.2rem;
         background: rgba(255, 255, 255, 0.1);
-        border: none;
-        border-radius: 0.5rem;
-        color: var(--text-color);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        border-radius: 4px;
+        padding: 0.5rem 1rem;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.2s;
+    }
+
+    .page-button:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.2);
     }
 
     .page-button:disabled {
@@ -282,85 +273,27 @@
         cursor: not-allowed;
     }
 
-    .page-button:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.15);
-    }
-
     .page-info {
+        color: white;
         font-size: 0.9rem;
-        color: var(--text-color);
     }
 
-    .selected-music {
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Scrollbar styling */
+    .modal-content::-webkit-scrollbar {
+        width: 8px;
     }
 
-    .music-preview {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .remove-button {
-        background: none;
-        border: none;
-        color: var(--text-color);
-        font-size: 1.5rem;
-        cursor: pointer;
-        padding: 0.5rem;
-        line-height: 1;
-        transition: all 0.3s ease;
-    }
-
-    .remove-button:hover {
-        color: var(--accent-color);
-    }
-
-    .glass-button {
+    .modal-content::-webkit-scrollbar-track {
         background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: var(--text-color);
-        padding: 0.75rem 1.5rem;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
+        border-radius: 4px;
     }
 
-    .glass-button:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.15);
+    .modal-content::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
     }
 
-    .glass-button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .glass-panel {
-        background: rgba(23, 23, 23, 0.98);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    @media (max-width: 1200px) {
-        .video-grid {
-            grid-template-columns: repeat(3, 250px);
-        }
-    }
-
-    @media (max-width: 900px) {
-        .video-grid {
-            grid-template-columns: repeat(2, 250px);
-        }
-    }
-
-    @media (max-width: 600px) {
-        .video-grid {
-            grid-template-columns: repeat(1, 250px);
-        }
+    .modal-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
     }
 </style>

@@ -24,6 +24,12 @@
                                 <i class="fas fa-info-circle"></i> Info
                             </button>
                             <button
+                                v-if="!isPublished(video)"
+                                @click="showPublishModal(video)"
+                            >
+                                <i class="fab fa-youtube"></i> Pubblica
+                            </button>
+                            <button
                                 class="delete-btn"
                                 @click="showDeleteConfirm(video)"
                             >
@@ -33,7 +39,17 @@
                     </div>
                 </div>
                 <div class="video-info">
-                    <h3>{{ video.title || 'Video senza titolo' }}</h3>
+                    <div class="video-header">
+                        <h3>{{ video.title || 'Video senza titolo' }}</h3>
+                        <div
+                            class="status-tag"
+                            :class="getStatusClass(video)"
+                            :data-tooltip="getStatusTooltip(video)"
+                        >
+                            {{ getStatusText(video) }}
+                        </div>
+                    </div>
+                    <p>{{ video.description || 'Nessuna descrizione' }}</p>
                     <div class="video-metadata">
                         <span
                             ><i class="fas fa-calendar"></i>
@@ -78,6 +94,12 @@
             v-model:show="showInfoModal"
             :video-id="selectedVideo?.id"
         />
+
+        <PublishModal
+            v-model="isPublishModalVisible"
+            :video="selectedVideo"
+            @publish="handlePublish"
+        />
     </div>
 </template>
 
@@ -86,6 +108,7 @@
     import DeleteVideoModal from '../components/DeleteVideoModal.vue';
     import VideoInfoModal from '../components/VideoInfoModal.vue';
     import VideoPlayer from '../components/VideoPlayer.vue';
+    import PublishModal from '../components/PublishModal.vue';
 
     export default {
         name: 'VideoCollection',
@@ -93,18 +116,20 @@
             DeleteVideoModal,
             VideoInfoModal,
             VideoPlayer,
+            PublishModal,
         },
         data() {
             return {
                 videos: [],
+                activeMenu: null,
+                isPublishModalVisible: false,
+                selectedVideo: null,
+                showDeleteModal: false,
+                showInfoModal: false,
                 currentPage: 1,
                 totalPages: 1,
                 pageSize: 8,
                 totalVideos: 0,
-                activeMenu: null,
-                showDeleteModal: false,
-                showInfoModal: false,
-                selectedVideo: null,
                 baseUrl: 'http://localhost:3000', // URL base senza /api
             };
         },
@@ -151,6 +176,37 @@
                 this.showInfoModal = true;
                 this.activeMenu = null;
             },
+            showPublishModal(video) {
+                this.selectedVideo = video;
+                this.isPublishModalVisible = true;
+            },
+            async handlePublish(publishData) {
+                try {
+                    const response = await fetch(
+                        `${this.baseUrl}/api/videos/${publishData.videoId}/publish`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(publishData),
+                        }
+                    );
+
+                    if (!response.ok) {
+                        throw new Error('Failed to publish video');
+                    }
+
+                    // Aggiorna la lista dei video
+                    await this.fetchVideos();
+                } catch (error) {
+                    console.error('Error publishing video:', error);
+                    // TODO: Mostrare un messaggio di errore all'utente
+                }
+            },
+            isPublished(video) {
+                return video.publish_status === 'published';
+            },
             showDeleteConfirm(video) {
                 this.selectedVideo = video;
                 this.showDeleteModal = true;
@@ -176,6 +232,36 @@
                 this.currentPage = page;
                 await this.fetchVideos();
             },
+            getStatusClass(video) {
+                switch (video.publish_status) {
+                    case 'published':
+                        return 'published';
+                    case 'scheduled':
+                        return 'scheduled';
+                    case 'draft':
+                        return 'unpublished';
+                    default:
+                        return 'unpublished';
+                }
+            },
+            getStatusText(video) {
+                switch (video.publish_status) {
+                    case 'published':
+                        return 'Pubblicato';
+                    case 'scheduled':
+                        return 'Programmato';
+                    case 'draft':
+                        return 'Non pubblicato';
+                    default:
+                        return 'Non pubblicato';
+                }
+            },
+            getStatusTooltip(video) {
+                if (video.publish_status === 'scheduled' && video.publish_at) {
+                    return `Programmato per: ${this.formatDate(video.publish_at)}`;
+                }
+                return '';
+            },
         },
         mounted() {
             this.fetchVideos();
@@ -197,10 +283,10 @@
     }
 
     .video-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        display: flex;
         gap: 20px;
         margin-top: 20px;
+        flex-wrap: wrap;
     }
 
     .video-card {
@@ -212,6 +298,7 @@
         box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.18);
         transition: transform 0.2s ease;
+        width: 350px;
     }
 
     .video-card:hover {
@@ -280,10 +367,64 @@
         padding: 15px;
     }
 
-    .video-info h3 {
-        margin: 0 0 10px 0;
-        font-size: 1.1em;
-        color: var(--text-color);
+    .video-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+    }
+
+    .video-header h3 {
+        margin: 0;
+        flex: 1;
+    }
+
+    .status-tag {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        min-width: 90px;
+        text-align: center;
+        position: relative;
+    }
+
+    .status-tag[data-tooltip]:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        top: -30px;
+        right: 0;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        z-index: 10;
+    }
+
+    .status-tag[data-tooltip]:hover::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        right: 15px;
+        border: 5px solid transparent;
+        border-top-color: rgba(0, 0, 0, 0.8);
+    }
+
+    .status-tag.published {
+        background-color: #4caf50;
+        color: white;
+    }
+
+    .status-tag.scheduled {
+        background-color: #ffc107;
+        color: black;
+    }
+
+    .status-tag.unpublished {
+        background-color: #f44336;
+        color: white;
     }
 
     .video-metadata {

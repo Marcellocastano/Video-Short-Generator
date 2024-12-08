@@ -25,7 +25,9 @@
 
 body {
     min-height: 100vh;
-    background: #092862;
+    background-color: #0093e9;
+    background-image: linear-gradient(160deg, #0093e9 0%, #80d0c7 100%);
+
     font-family: var(--font-family);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -36,6 +38,15 @@ body {
     min-height: 100vh;
     position: relative;
     display: flex;
+}
+
+.content {
+    display: flex;
+    gap: 40px;
+}
+
+.generate-container {
+    width: 100%;
 }
 
 .content-wrapper {
@@ -53,7 +64,7 @@ body {
     min-width: 800px;
     max-width: 90vw;
     margin: 30px auto 0;
-    padding: 0 1rem;
+    padding: 0 15rem;
     position: relative;
 }
 
@@ -185,66 +196,6 @@ textarea::placeholder {
 .generate-button:active:not(:disabled) {
     transform: translateY(1px);
     box-shadow: 0 2px 10px rgba(0, 129, 167, 0.3);
-}
-
-/* Cerchi decorativi */
-.floating-circles {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    z-index: 0;
-    overflow: hidden;
-}
-
-.circle {
-    position: absolute;
-    border-radius: 50%;
-    background: radial-gradient(
-        circle at center,
-        var(--glass-highlight),
-        transparent
-    );
-    animation: float 20s infinite linear;
-    opacity: 0.5;
-}
-
-.circle:nth-child(1) {
-    width: 400px;
-    height: 400px;
-    top: -100px;
-    left: 10%;
-    animation-duration: 25s;
-    background: radial-gradient(circle at center, #dab307, transparent);
-}
-
-.circle:nth-child(2) {
-    width: 500px;
-    height: 500px;
-    bottom: -200px;
-    right: 15%;
-    animation-duration: 30s;
-    animation-delay: -5s;
-    background: radial-gradient(
-        circle at center,
-        var(--gradient-end),
-        transparent
-    );
-}
-
-.circle:nth-child(3) {
-    width: 300px;
-    height: 300px;
-    top: 40%;
-    left: -100px;
-    animation-duration: 20s;
-    animation-delay: -10s;
-    background: radial-gradient(
-        circle at center,
-        var(--gradient-middle),
-        transparent
-    );
 }
 
 @keyframes float {
@@ -392,13 +343,7 @@ h2 {
 
 /* Video preview */
 .generated-video-section {
-    margin-top: 2rem;
-    padding: 2rem;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
     border-radius: 1rem;
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
 }
 
 .generated-video-section h3 {
@@ -408,6 +353,7 @@ h2 {
 }
 
 .video-preview {
+    height: 440px;
     width: 100%;
     border-radius: 0.5rem;
     overflow: hidden;
@@ -415,7 +361,8 @@ h2 {
 }
 
 .preview-player {
-    width: 100%;
+    width: 250px;
+    height: 100%;
     max-height: 500px;
     object-fit: contain;
 }
@@ -445,4 +392,10 @@ h2 {
         width: 100%;
         padding: 0 0.5rem;
     }
+}
+
+.center-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }

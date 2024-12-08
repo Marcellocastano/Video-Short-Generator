@@ -168,6 +168,7 @@
         background: #000;
         border-radius: 8px;
         overflow: hidden;
+        height: 300px;
     }
 
     .video-element {

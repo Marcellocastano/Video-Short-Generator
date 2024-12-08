@@ -51,19 +51,12 @@
         left: 0;
         top: 0;
         height: 100vh;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        color: white;
         width: var(--sidebar-width);
         z-index: 1000;
         box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        border-right: 1px solid rgba(255, 255, 255, 0.18);
-        background: linear-gradient(
-            135deg,
-            var(--gradient-start),
-            var(--gradient-middle),
-            var(--gradient-end)
-        );
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(17px);
+        -webkit-backdrop-filter: blur(17px);
         transition: all 0.3s ease;
     }
 

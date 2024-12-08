@@ -6,97 +6,119 @@
         <main class="main-container">
             <div class="glass-container">
                 <div class="content">
-                    <div class="flex-container">
-                        <VideoSelector
-                            ref="videoSelector"
-                            v-model="selectedVideos"
-                            @update:modelValue="updateSelectedVideos"
-                        />
+                    <div class="generate-container">
+                        <div class="form-group">
+                            <input
+                                v-model="videoTitle"
+                                type="text"
+                                class="glass-input"
+                                placeholder="Titolo del video"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <textarea
+                                v-model="videoDescription"
+                                class="glass-input"
+                                placeholder="Descrizione del video"
+                                rows="3"
+                            ></textarea>
+                        </div>
 
-                        <!-- Music Search Input -->
-                        <div class="music-search">
-                            <div class="search-container">
-                                <input
-                                    v-model="musicSearchQuery"
-                                    @keyup.enter="searchMusic"
-                                    type="text"
-                                    class="glass-input"
-                                    placeholder="Cerca musica di sottofondo..."
-                                />
-                                <button
-                                    @click="searchMusic"
-                                    class="glass-button"
-                                    :disabled="!musicSearchQuery.trim()"
+                        <div class="flex-container">
+                            <VideoSelector
+                                ref="videoSelector"
+                                v-model="selectedVideos"
+                                @update:modelValue="updateSelectedVideos"
+                            />
+
+                            <!-- Music Search Input -->
+                            <div class="music-search">
+                                <div class="search-container">
+                                    <input
+                                        v-model="musicSearchQuery"
+                                        @keyup.enter="searchMusic"
+                                        type="text"
+                                        class="glass-input"
+                                        placeholder="Cerca musica di sottofondo..."
+                                    />
+                                    <button
+                                        @click="searchMusic"
+                                        class="glass-button"
+                                        :disabled="!musicSearchQuery.trim()"
+                                    >
+                                        Cerca
+                                    </button>
+                                </div>
+
+                                <div
+                                    v-if="selectedMusic"
+                                    class="selected-music-info"
                                 >
-                                    Cerca
-                                </button>
+                                    <span>{{ selectedMusic.title }}</span>
+                                    <span style="opacity: 0.7">{{
+                                        selectedMusic.artist
+                                    }}</span>
+                                </div>
                             </div>
+                        </div>
 
-                            <div
-                                v-if="selectedMusic"
-                                class="selected-music-info"
+                        <div class="text-input search-container">
+                            <textarea
+                                v-model="text"
+                                class="glass-input"
+                                placeholder="Inserisci il contenuto del video"
+                                rows="4"
+                            ></textarea>
+                        </div>
+
+                        <!-- <div class="voice-options">
+                            <div class="options-grid">
+                                <div class="option">
+                                    <select
+                                        v-model="language"
+                                        class="glass-input"
+                                    >
+                                        <option value="en-US">
+                                            English (US)
+                                        </option>
+                                        <option value="it-IT">Italian</option>
+                                    </select>
+                                </div>
+
+                                <div class="option">
+                                    <select v-model="voice" class="glass-input">
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div> -->
+
+                        <div v-if="error" class="error">{{ error }}</div>
+
+                        <div class="center-container">
+                            <button
+                                @click="generateVideo"
+                                class="glass-button generate-button"
+                                :disabled="!canGenerate || generating"
                             >
-                                <span>{{ selectedMusic.title }}</span>
-                                <span style="opacity: 0.7">{{
-                                    selectedMusic.artist
-                                }}</span>
+                                {{ generating ? 'Creazione...' : 'Crea' }}
+                            </button>
+                        </div>
+
+                        <div v-if="generating" class="generation-progress">
+                            <div class="progress-bar">
+                                <div
+                                    class="progress-fill"
+                                    :style="{ width: generationProgress + '%' }"
+                                ></div>
+                            </div>
+                            <div class="progress-step">
+                                {{ generationStep }}
                             </div>
                         </div>
                     </div>
-
-                    <div class="text-input">
-                        <textarea
-                            v-model="text"
-                            class="glass-input"
-                            placeholder="Inserisci il contenuto del video"
-                            rows="4"
-                        ></textarea>
-                    </div>
-
-                    <div class="voice-options">
-                        <div class="options-grid">
-                            <div class="option">
-                                <select v-model="language" class="glass-input">
-                                    <option value="en-US">English (US)</option>
-                                    <option value="it-IT">Italian</option>
-                                </select>
-                            </div>
-
-                            <div class="option">
-                                <select v-model="voice" class="glass-input">
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div v-if="error" class="error">{{ error }}</div>
-
-                    <button
-                        @click="generateVideo"
-                        class="glass-button generate-button"
-                        :disabled="!canGenerate || generating"
-                    >
-                        {{ generating ? 'Creazione...' : 'Crea' }}
-                    </button>
-
-                    <div v-if="generating" class="generation-progress">
-                        <div class="progress-bar">
-                            <div
-                                class="progress-fill"
-                                :style="{ width: generationProgress + '%' }"
-                            ></div>
-                        </div>
-                        <div class="progress-step">{{ generationStep }}</div>
-                    </div>
-
-                    <!-- Sezione Video Generato -->
-                    <div
-                        v-if="generatedVideoUrl"
-                        class="generated-video-section"
-                    >
-                        <h3>Video Generato</h3>
+                    <div class="generated-video-section">
                         <div class="video-preview">
                             <video
                                 :src="generatedVideoUrl"
@@ -107,23 +129,28 @@
                             </video>
                         </div>
                         <div class="download-section">
-                            <button
-                                @click="downloadVideo(generatedVideoUrl)"
-                                class="glass-button download-button"
-                            >
-                                Scarica Video
-                            </button>
-                            <button
-                                @click="saveVideoToDb"
-                                class="glass-button save-button"
-                                :disabled="saving"
-                            >
-                                {{
-                                    saving
-                                        ? 'Salvataggio...'
-                                        : 'Salva in Raccolta'
-                                }}
-                            </button>
+                            <div v-if="generatedVideoUrl" class="video-actions">
+                                <button
+                                    class="glass-button"
+                                    @click="downloadVideo(generatedVideoUrl)"
+                                >
+                                    Scarica
+                                </button>
+                                <button
+                                    class="glass-button"
+                                    @click="saveVideoToDb"
+                                    :disabled="!videoTitle"
+                                >
+                                    Salva
+                                </button>
+                                <button
+                                    class="glass-button"
+                                    @click="publishVideo"
+                                    :disabled="!videoTitle"
+                                >
+                                    Pubblica
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -146,6 +173,12 @@
             @update:show="showMusicModal = $event"
             @selected="handleMusicSelected"
         />
+
+        <PublishModal
+            v-model="showPublishModal"
+            :video="savedVideo"
+            @publish="handlePublish"
+        />
     </div>
 </template>
 
@@ -154,7 +187,9 @@
     import VideoSelector from '../components/VideoSelector.vue';
     import SearchModal from '../components/SearchModal.vue';
     import MusicSelector from '../components/MusicSelector.vue';
+    import PublishModal from '../components/PublishModal.vue';
 
+    const baseUrl = 'http://localhost:3000'; // URL base dell'API
     const text = ref('');
     const selectedVideos = ref([]);
     const language = ref('en-US');
@@ -173,6 +208,10 @@
     const musicSearchQuery = ref('');
     const generatedVideoUrl = ref('');
     const saving = ref(false);
+    const videoTitle = ref('');
+    const videoDescription = ref('');
+    const showPublishModal = ref(false);
+    const savedVideo = ref(null);
 
     // Esponiamo le funzioni globalmente per il VideoSelector
     window.$app = {
@@ -256,81 +295,107 @@
     };
 
     const saveVideoToDb = async () => {
-        if (saving.value) return;
-
-        saving.value = true;
         try {
-            // Prima scarichiamo il video
-            const videoResponse = await fetch(generatedVideoUrl.value);
-            const videoBlob = await videoResponse.blob();
+            if (!videoTitle.value) {
+                alert('Per favore inserisci un titolo per il video');
+                return;
+            }
 
-            // Creiamo un nuovo Blob con il tipo MIME corretto
-            const videoWithMimeType = new Blob([videoBlob], {
-                type: 'video/mp4',
-            });
+            saving.value = true;
 
-            // Creiamo un FormData e aggiungiamo tutti i dati necessari
+            // Ottieni il file video dall'URL
+            const response = await fetch(generatedVideoUrl.value);
+            const blob = await response.blob();
+
             const formData = new FormData();
-            formData.append('video', videoWithMimeType, 'generated-video.mp4');
-            formData.append('title', text.value.slice(0, 100));
-            formData.append('description', text.value);
-            formData.append('language', language.value);
+            formData.append('video', blob, 'generated-video.mp4');
+            formData.append('title', videoTitle.value);
+            formData.append('description', videoDescription.value || '');
 
-            // Aggiungiamo i metadata come JSON stringificato
-            const metadata = {
-                voice: voice.value,
-                backgroundMusic: selectedMusic.value
-                    ? {
-                          title: selectedMusic.value.title,
-                          artist: selectedMusic.value.artist,
-                          url: selectedMusic.value.url,
-                      }
-                    : null,
-                sourceVideos: selectedVideos.value.map(video => ({
-                    url: video.videos.medium.url,
-                    thumbnail: video.thumbnail,
-                })),
-            };
-            formData.append('hashtags', JSON.stringify([])); // Array vuoto per ora
-            formData.append('metadata', JSON.stringify(metadata));
-
-            console.log('Saving video with data:', {
-                title: text.value.slice(0, 100),
-                description: text.value,
-                language: language.value,
-                metadata,
-            });
-
-            const response = await fetch('/api/videos/save', {
+            const saveResponse = await fetch(`${baseUrl}/api/videos/save`, {
                 method: 'POST',
                 body: formData,
             });
 
-            if (!response.ok) {
-                const contentType = response.headers.get('content-type');
-                let errorMessage;
-
-                if (contentType && contentType.includes('application/json')) {
-                    const errorData = await response.json();
-                    errorMessage =
-                        errorData.message ||
-                        'Errore durante il salvataggio del video';
-                } else {
-                    const textError = await response.text();
-                    console.error('Error response:', textError);
-                    errorMessage = 'Errore durante il salvataggio del video';
-                }
-
-                throw new Error(errorMessage);
+            if (!saveResponse.ok) {
+                throw new Error('Failed to save video');
             }
 
-            // Mostra un messaggio di successo
+            const result = await saveResponse.json();
+
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to save video');
+            }
+
+            // Costruisci l'oggetto video con l'ID restituito dal backend
+            const savedVideoData = {
+                id: result.videoId,
+                title: videoTitle.value,
+                description: videoDescription.value,
+                file_path: result.filePath,
+            };
+
             alert('Video salvato con successo nella raccolta!');
+            return savedVideoData;
         } catch (error) {
             console.error('Errore durante il salvataggio:', error);
             alert('Errore durante il salvataggio del video: ' + error.message);
+            throw error;
         } finally {
             saving.value = false;
+        }
+    };
+
+    const publishVideo = async () => {
+        try {
+            // Prima salva il video se non è già stato salvato
+            if (!savedVideo.value) {
+                savedVideo.value = await saveVideoToDb();
+            }
+
+            // Apri la modale di pubblicazione
+            showPublishModal.value = true;
+        } catch (error) {
+            console.error('Error preparing video for publishing:', error);
+            alert(
+                'Si è verificato un errore durante la preparazione del video per la pubblicazione.'
+            );
+        }
+    };
+
+    const handlePublish = async publishData => {
+        try {
+            const response = await fetch(
+                `${baseUrl}/api/videos/${savedVideo.value.id}/publish`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(publishData),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to publish video');
+            }
+
+            const result = await response.json();
+            alert('Video pubblicato con successo su YouTube!');
+
+            // Resetta lo stato
+            showPublishModal.value = false;
+            savedVideo.value = null;
+            generatedVideoUrl.value = null;
+            videoTitle.value = '';
+            videoDescription.value = '';
+            selectedVideos.value = [];
+            selectedMusic.value = null;
+        } catch (error) {
+            console.error('Error publishing video:', error);
+            alert(
+                'Si è verificato un errore durante la pubblicazione del video.'
+            );
         }
     };
 
@@ -351,6 +416,8 @@
                     video => video.videos.medium.url
                 ),
                 backgroundMusic: selectedMusic.value?.url,
+                title: videoTitle.value,
+                description: videoDescription.value,
             };
 
             console.log('Sending video data:', videoData);
@@ -412,37 +479,48 @@
     .generate-page {
         padding: 2rem;
         min-height: 100vh;
-        background: var(--background-gradient);
     }
 
-    /* Stili per la sezione del video generato */
-    .generated-video-section {
-        margin-top: 2rem;
+    .youtube-info-section {
+        margin-bottom: 2rem;
         padding: 1.5rem;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
     }
 
-    .generated-video-section h3 {
+    .youtube-info-section h2 {
         color: var(--text-color);
         margin-bottom: 1rem;
         font-size: 1.2rem;
+        font-weight: 500;
     }
 
-    .video-preview {
-        width: 100%;
+    .form-group {
         margin-bottom: 1rem;
-        border-radius: 0.5rem;
-        overflow: hidden;
     }
 
-    .preview-player {
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .glass-input {
         width: 100%;
-        max-height: 400px;
-        object-fit: contain;
-        background: rgba(0, 0, 0, 0.2);
+        padding: 0.8rem 1rem;
+        border-radius: 8px;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        color: var(--text-color);
+        transition: all 0.3s ease;
+    }
+
+    .glass-input:focus {
+        outline: none;
+        border-color: var(--glass-highlight);
+        box-shadow: 0 0 0 2px var(--glass-highlight);
+    }
+
+    textarea.glass-input {
+        resize: vertical;
+        min-height: 80px;
     }
 
     .download-section {
@@ -473,7 +551,27 @@
         background: rgba(var(--accent-color-rgb), 0.2);
     }
 
+    .download-button:disabled,
     .save-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .video-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .video-actions .glass-button {
+        min-width: 120px;
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+    }
+
+    .video-actions .glass-button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
     }
