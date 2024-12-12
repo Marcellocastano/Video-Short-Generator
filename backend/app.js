@@ -4,7 +4,6 @@ import path from 'path';
 import fs from 'fs/promises';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
-import videoRoutes from './routes/videoRoutes.js';
 import videosRouter from './routes/videos.js';
 import musicRouter from './routes/music.js';
 import { uploadsDir, videosDir } from './utils/paths.js';
@@ -79,7 +78,6 @@ app.use(
 
 // API routes
 app.use('/api/videos', videosRouter);
-app.use('/api', videoRoutes);
 app.use('/api/music', musicRouter);
 
 // Error handling
