@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import videosRouter from './routes/videos.js';
 import musicRouter from './routes/music.js';
+import ttsRouter from './routes/tts.js';
 import { uploadsDir, videosDir } from './utils/paths.js';
 import publishRoutes from './routes/publish.js';
 import authRoutes from './routes/auth.js';
@@ -79,6 +80,7 @@ app.use(
 // API routes
 app.use('/api/videos', videosRouter);
 app.use('/api/music', musicRouter);
+app.use('/api/tts', ttsRouter);
 
 // Error handling
 app.use((err, req, res, next) => {
