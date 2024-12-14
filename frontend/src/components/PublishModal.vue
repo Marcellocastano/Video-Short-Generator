@@ -53,61 +53,62 @@
     </div>
 </template>
 
-<script>
-    export default {
-        props: {
-            modelValue: {
-                type: Boolean,
-                required: true,
-            },
-            video: {
-                type: Object,
-                required: true,
-            },
-        },
-        emits: ['update:modelValue', 'publish'],
-        data() {
-            return {
-                publishMode: 'now',
-                privacy: 'private',
-                scheduledTime: '',
-            };
-        },
-        computed: {
-            minDateTime() {
-                const now = new Date();
-                now.setMinutes(now.getMinutes() + 1);
-                return now.toISOString().slice(0, 16);
-            },
-            isValid() {
-                if (this.publishMode === 'schedule') {
-                    return (
-                        this.scheduledTime &&
-                        new Date(this.scheduledTime) > new Date()
-                    );
-                }
-                return true;
-            },
-        },
-        methods: {
-            closeModal() {
-                this.$emit('update:modelValue', false);
-            },
-            handlePublish() {
-                const publishData = {
-                    videoId: this.video.id,
-                    publishMode: this.publishMode,
-                    privacy: this.privacy,
-                    scheduledTime:
-                        this.publishMode === 'schedule'
-                            ? this.scheduledTime
-                            : null,
-                };
+<script setup>
+    import { ref, computed } from 'vue';
 
-                this.$emit('publish', publishData);
-                this.closeModal();
-            },
+    // Props definition
+    const props = defineProps({
+        modelValue: {
+            type: Boolean,
+            required: true,
         },
+        video: {
+            type: Object,
+            required: true,
+        },
+    });
+
+    // Emits definition
+    const emit = defineEmits(['update:modelValue', 'publish']);
+
+    // State
+    const publishMode = ref('now');
+    const privacy = ref('private');
+    const scheduledTime = ref('');
+
+    // Computed properties
+    const minDateTime = computed(() => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 1);
+        return now.toISOString().slice(0, 16);
+    });
+
+    const isValid = computed(() => {
+        if (publishMode.value === 'schedule') {
+            return (
+                scheduledTime.value &&
+                new Date(scheduledTime.value) > new Date()
+            );
+        }
+        return true;
+    });
+
+    // Methods
+    const closeModal = () => {
+        emit('update:modelValue', false);
+    };
+
+    const handlePublish = () => {
+        const publishData = {
+            videoId: props.video.id,
+            publishMode: publishMode.value,
+            privacy: privacy.value,
+            scheduledTime:
+                publishMode.value === 'schedule' ? scheduledTime.value : null,
+        };
+
+        emit('publish', publishData);
+        closeModal();
     };
 </script>
 

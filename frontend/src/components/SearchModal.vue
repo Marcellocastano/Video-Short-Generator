@@ -52,58 +52,61 @@
     </div>
 </template>
 
-<script>
-    export default {
-        name: 'SearchModal',
-        props: {
-            show: Boolean,
-            videos: Array,
-            searchQuery: String,
-            selectedVideos: {
-                type: Array,
-                default: () => [],
-            },
-        },
-        emits: ['close', 'update:selectedVideos'],
-        data() {
-            return {
-                videoRefs: {},
-            };
-        },
-        methods: {
-            closeModal() {
-                this.$emit('close');
-            },
-            formatDuration(seconds) {
-                const minutes = Math.floor(seconds / 60);
-                const remainingSeconds = seconds % 60;
-                return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-            },
-            isSelected(video) {
-                return this.selectedVideos.some(v => v.id === video.id);
-            },
-            toggleVideoSelection(video) {
-                const newSelectedVideos = [...this.selectedVideos];
-                const index = newSelectedVideos.findIndex(
-                    v => v.id === video.id
-                );
+<script setup>
+    import { ref } from 'vue';
 
-                if (index === -1) {
-                    newSelectedVideos.push(video);
-                } else {
-                    newSelectedVideos.splice(index, 1);
-                }
-
-                this.$emit('update:selectedVideos', newSelectedVideos);
-            },
-            playVideo(video) {
-                video.play();
-            },
-            pauseVideo(video) {
-                video.pause();
-                video.currentTime = 0;
-            },
+    // Props definition
+    const props = defineProps({
+        show: Boolean,
+        videos: Array,
+        searchQuery: String,
+        selectedVideos: {
+            type: Array,
+            default: () => [],
         },
+    });
+
+    // Emits definition
+    const emit = defineEmits(['close', 'update:selectedVideos']);
+
+    // State
+    const videoRefs = ref({});
+
+    // Methods
+    const closeModal = () => {
+        emit('close');
+    };
+
+    const formatDuration = seconds => {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    };
+
+    const isSelected = video => {
+        return props.selectedVideos.some(v => v.id === video.id);
+    };
+
+    const toggleVideoSelection = video => {
+        const newSelectedVideos = [...props.selectedVideos];
+        const index = newSelectedVideos.findIndex(v => v.id === video.id);
+
+        if (index === -1) {
+            newSelectedVideos.push(video);
+        } else {
+            newSelectedVideos.splice(index, 1);
+        }
+
+        emit('update:selectedVideos', newSelectedVideos);
+    };
+
+    const playVideo = video => {
+        video.play();
+    };
+
+    const pauseVideo = video => {
+        video.pause();
+        video.currentTime = 0;
     };
 </script>
 

@@ -29,19 +29,15 @@
     </div>
 </template>
 
-<script>
-    export default {
-        name: 'Sidebar',
-        data() {
-            return {
-                isCollapsed: false,
-            };
-        },
-        methods: {
-            toggleSidebar() {
-                this.isCollapsed = !this.isCollapsed;
-            },
-        },
+<script setup>
+    import { ref } from 'vue';
+
+    // State
+    const isCollapsed = ref(false);
+
+    // Methods
+    const toggleSidebar = () => {
+        isCollapsed.value = !isCollapsed.value;
     };
 </script>
 

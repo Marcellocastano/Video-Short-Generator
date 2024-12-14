@@ -23,50 +23,48 @@
     </div>
 </template>
 
-<script>
+<script setup>
+    import { ref } from 'vue';
     import axios from 'axios';
 
-    export default {
-        name: 'DeleteVideoModal',
-        props: {
-            show: {
-                type: Boolean,
-                required: true,
-            },
-            videoId: {
-                type: Number,
-                required: true,
-            },
-            videoTitle: {
-                type: String,
-                required: true,
-            },
+    // Props definition
+    const props = defineProps({
+        show: {
+            type: Boolean,
+            required: true,
         },
-        data() {
-            return {
-                isDeleting: false,
-            };
+        videoId: {
+            type: Number,
+            required: true,
         },
-        methods: {
-            async confirmDelete() {
-                this.isDeleting = true;
-                try {
-                    await axios.delete(`/api/videos/${this.videoId}`);
-                    this.$emit('video-deleted');
-                    this.closeModal();
-                } catch (error) {
-                    console.error(
-                        "Errore durante l'eliminazione del video:",
-                        error
-                    );
-                } finally {
-                    this.isDeleting = false;
-                }
-            },
-            closeModal() {
-                this.$emit('update:show', false);
-            },
+        videoTitle: {
+            type: String,
+            required: true,
         },
+    });
+
+    // Emits definition
+    const emit = defineEmits(['update:show', 'video-deleted']);
+
+    // State
+    const isDeleting = ref(false);
+
+    // Methods
+    const confirmDelete = async () => {
+        isDeleting.value = true;
+        try {
+            await axios.delete(`/api/videos/${props.videoId}`);
+            emit('video-deleted');
+            closeModal();
+        } catch (error) {
+            console.error("Errore durante l'eliminazione del video:", error);
+        } finally {
+            isDeleting.value = false;
+        }
+    };
+
+    const closeModal = () => {
+        emit('update:show', false);
     };
 </script>
 
