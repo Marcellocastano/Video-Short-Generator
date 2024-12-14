@@ -145,7 +145,7 @@
             </v-card-text>
         </v-card>
 
-        <SearchModal
+        <VideoModal
             v-if="showSearchModal"
             :show="showSearchModal"
             :videos="searchResults"
@@ -172,9 +172,9 @@
 <script setup>
     import { ref, watchEffect, computed } from 'vue';
     import VideoSelector from '../components/VideoSelector.vue';
-    import SearchModal from '../components/SearchModal.vue';
-    import MusicModal from '../components/MusicModal.vue';
-    import PublishModal from '../components/PublishModal.vue';
+    import VideoModal from '../components/Modals/VideoModal.vue';
+    import MusicModal from '../components/Modals/MusicModal.vue';
+    import PublishModal from '../components/Modals/PublishModal.vue';
 
     // Constants
     const baseUrl = 'http://localhost:3000';
