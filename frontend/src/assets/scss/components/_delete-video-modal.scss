@@ -1,0 +1,8 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.video-title {
+    font-weight: $font-weight-medium;
+    color: $disabled-color;
+    margin-top: $spacing-sm;
+}

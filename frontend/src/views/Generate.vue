@@ -1,28 +1,27 @@
 <template>
-    <div class="generate-page">
+    <v-container class="generate-page">
         <div class="logo-container">
             <img src="../assets/logo.png" alt="Logo" />
         </div>
-        <main class="main-container">
-            <div class="glass-container">
-                <div class="content">
-                    <div class="generate-container">
-                        <div class="form-group">
-                            <input
-                                v-model="videoTitle"
-                                type="text"
-                                class="glass-input"
-                                placeholder="Titolo del video"
-                            />
-                        </div>
-                        <div class="form-group">
-                            <textarea
-                                v-model="videoDescription"
-                                class="glass-input"
-                                placeholder="Descrizione del video"
-                                rows="3"
-                            ></textarea>
-                        </div>
+
+        <v-card class="glass-container">
+            <v-card-text class="content">
+                <div class="generate-container">
+                    <v-form @submit.prevent="generateVideo">
+                        <v-text-field
+                            v-model="videoTitle"
+                            label="Titolo del video"
+                            variant="outlined"
+                            class="mb-4"
+                        />
+
+                        <v-textarea
+                            v-model="videoDescription"
+                            label="Descrizione del video"
+                            variant="outlined"
+                            rows="3"
+                            class="mb-4"
+                        />
 
                         <div class="flex-container">
                             <VideoSelector
@@ -31,133 +30,121 @@
                                 @update:modelValue="updateSelectedVideos"
                             />
 
-                            <!-- Music Search Input -->
                             <div class="music-search">
-                                <div class="search-container">
-                                    <input
-                                        v-model="musicSearchQuery"
-                                        @keyup.enter="searchMusic"
-                                        type="text"
-                                        class="glass-input"
-                                        placeholder="Cerca musica di sottofondo..."
-                                    />
-                                    <button
-                                        @click="searchMusic"
-                                        class="glass-button"
-                                        :disabled="!musicSearchQuery.trim()"
-                                    >
-                                        Cerca
-                                    </button>
-                                </div>
+                                <v-text-field
+                                    v-model="musicSearchQuery"
+                                    label="Cerca musica di sottofondo..."
+                                    variant="outlined"
+                                    @keyup.enter="searchMusic"
+                                    :append-inner-icon="'mdi-magnify'"
+                                    @click:append-inner="searchMusic"
+                                />
 
-                                <div
+                                <v-card
                                     v-if="selectedMusic"
-                                    class="selected-music-info"
+                                    variant="flat"
+                                    class="selected-music-info mt-2"
                                 >
-                                    <span>{{ selectedMusic.title }}</span>
-                                    <span style="opacity: 0.7">{{
-                                        selectedMusic.artist
-                                    }}</span>
-                                </div>
+                                    <v-card-text>
+                                        <div class="text-h6">
+                                            {{ selectedMusic.title }}
+                                        </div>
+                                        <div class="text-subtitle-2">
+                                            {{ selectedMusic.artist }}
+                                        </div>
+                                    </v-card-text>
+                                </v-card>
                             </div>
                         </div>
 
-                        <div class="text-input search-container">
-                            <textarea
-                                v-model="text"
-                                class="glass-input"
-                                placeholder="Inserisci il contenuto del video"
-                                rows="4"
-                            ></textarea>
-                        </div>
+                        <v-textarea
+                            v-model="text"
+                            label="Inserisci il contenuto del video"
+                            variant="outlined"
+                            rows="4"
+                            class="mb-4"
+                        />
 
-                        <!-- <div class="voice-options">
-                            <div class="options-grid">
-                                <div class="option">
-                                    <select
-                                        v-model="language"
-                                        class="glass-input"
-                                    >
-                                        <option value="en-US">
-                                            English (US)
-                                        </option>
-                                        <option value="it-IT">Italian</option>
-                                    </select>
-                                </div>
+                        <v-alert
+                            v-if="error"
+                            type="error"
+                            variant="tonal"
+                            class="mb-4"
+                        >
+                            {{ error }}
+                        </v-alert>
 
-                                <div class="option">
-                                    <select v-model="voice" class="glass-input">
-                                        <option value="male">Male</option>
-                                        <option value="female">Female</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div> -->
-
-                        <div v-if="error" class="error">{{ error }}</div>
-
-                        <div class="center-container">
-                            <button
-                                @click="generateVideo"
-                                class="glass-button generate-button"
+                        <div class="text-center">
+                            <v-btn
+                                color="primary"
+                                size="large"
+                                :loading="generating"
                                 :disabled="!canGenerate || generating"
+                                @click="generateVideo"
                             >
                                 {{ generating ? 'Creazione...' : 'Crea' }}
-                            </button>
+                            </v-btn>
                         </div>
 
-                        <div v-if="generating" class="generation-progress">
-                            <div class="progress-bar">
-                                <div
-                                    class="progress-fill"
-                                    :style="{ width: generationProgress + '%' }"
-                                ></div>
-                            </div>
-                            <div class="progress-step">
+                        <v-progress-linear
+                            v-if="generating"
+                            v-model="generationProgress"
+                            height="20"
+                            color="primary"
+                            class="mt-4"
+                        >
+                            <template v-slot:default>
                                 {{ generationStep }}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="generated-video-section">
-                        <div class="video-preview">
-                            <video
-                                :src="generatedVideoUrl"
-                                controls
-                                class="preview-player"
-                            >
-                                Il tuo browser non supporta il tag video.
-                            </video>
-                        </div>
-                        <div class="download-section">
-                            <div v-if="generatedVideoUrl" class="video-actions">
-                                <button
-                                    class="glass-button"
-                                    @click="downloadVideo(generatedVideoUrl)"
-                                >
-                                    Scarica
-                                </button>
-                                <button
-                                    class="glass-button"
-                                    @click="saveVideoToDb"
-                                    :disabled="!videoTitle"
-                                >
-                                    Salva
-                                </button>
-                                <button
-                                    class="glass-button"
-                                    @click="publishVideo"
-                                    :disabled="!videoTitle"
-                                >
-                                    Pubblica
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                            </template>
+                        </v-progress-linear>
+                    </v-form>
                 </div>
-            </div>
-        </main>
 
-        <!-- Modals -->
+                <div class="generated-video-section mt-6">
+                    <video
+                        v-if="generatedVideoUrl"
+                        :src="generatedVideoUrl"
+                        controls
+                        class="preview-player"
+                    >
+                        Il tuo browser non supporta il tag video.
+                    </video>
+
+                    <v-card-actions
+                        v-if="generatedVideoUrl"
+                        class="justify-center mt-4"
+                    >
+                        <v-btn
+                            color="primary"
+                            variant="outlined"
+                            @click="downloadVideo(generatedVideoUrl)"
+                        >
+                            Scarica
+                        </v-btn>
+
+                        <v-btn
+                            color="success"
+                            variant="outlined"
+                            @click="saveVideoToDb"
+                            :disabled="!videoTitle"
+                            class="mx-2"
+                        >
+                            Salva
+                        </v-btn>
+
+                        <v-btn
+                            color="info"
+                            variant="outlined"
+                            @click="publishVideo"
+                            :disabled="!videoTitle"
+                        >
+                            Pubblica
+                        </v-btn>
+                    </v-card-actions>
+                </div>
+            </v-card-text>
+        </v-card>
+
         <SearchModal
             v-if="showSearchModal"
             :show="showSearchModal"
@@ -167,7 +154,7 @@
             @close="closeSearchModal"
         />
 
-        <MusicSelector
+        <MusicModal
             :show="showMusicModal"
             :searchResults="musicSearchResults"
             @update:show="showMusicModal = $event"
@@ -179,14 +166,14 @@
             :video="savedVideo"
             @publish="handlePublish"
         />
-    </div>
+    </v-container>
 </template>
 
 <script setup>
     import { ref, watchEffect, computed } from 'vue';
     import VideoSelector from '../components/VideoSelector.vue';
     import SearchModal from '../components/SearchModal.vue';
-    import MusicSelector from '../components/MusicSelector.vue';
+    import MusicModal from '../components/MusicModal.vue';
     import PublishModal from '../components/PublishModal.vue';
 
     // Constants
@@ -476,105 +463,3 @@
         }
     };
 </script>
-
-<style scoped>
-    .generate-page {
-        padding: 2rem;
-        min-height: 100vh;
-    }
-
-    .youtube-info-section {
-        margin-bottom: 2rem;
-        padding: 1.5rem;
-        border-radius: 12px;
-    }
-
-    .youtube-info-section h2 {
-        color: var(--text-color);
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
-        font-weight: 500;
-    }
-
-    .form-group {
-        margin-bottom: 1rem;
-    }
-
-    .form-group:last-child {
-        margin-bottom: 0;
-    }
-
-    .glass-input {
-        width: 100%;
-        padding: 0.8rem 1rem;
-        border-radius: 8px;
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        color: var(--text-color);
-        transition: all 0.3s ease;
-    }
-
-    .glass-input:focus {
-        outline: none;
-        border-color: var(--glass-highlight);
-        box-shadow: 0 0 0 2px var(--glass-highlight);
-    }
-
-    textarea.glass-input {
-        resize: vertical;
-        min-height: 80px;
-    }
-
-    .download-section {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .download-button,
-    .save-button {
-        padding: 0.75rem 1.5rem;
-        font-size: 1rem;
-        background: rgba(255, 255, 255, 0.1);
-        color: var(--text-color);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 0.5rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .download-button:hover,
-    .save-button:hover {
-        background: rgba(255, 255, 255, 0.2);
-    }
-
-    .save-button {
-        background: rgba(var(--accent-color-rgb), 0.2);
-    }
-
-    .download-button:disabled,
-    .save-button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .video-actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-
-    .video-actions .glass-button {
-        min-width: 120px;
-        padding: 0.8rem 1.5rem;
-        font-size: 1rem;
-    }
-
-    .video-actions .glass-button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-</style>

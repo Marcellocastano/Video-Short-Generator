@@ -1,6 +1,7 @@
 <script setup>
     import { ref } from 'vue';
     import Sidebar from './components/Sidebar.vue';
+    import { VApp, VMain, VContainer } from 'vuetify/components';
 
     const isSidebarCollapsed = ref(false);
 
@@ -10,13 +11,16 @@
 </script>
 
 <template>
-    <div class="app">
+    <VApp>
         <Sidebar :is-collapsed="isSidebarCollapsed" @toggle="toggleSidebar" />
-        <div
-            class="content-wrapper"
-            :class="{ 'sidebar-collapsed': isSidebarCollapsed }"
-        >
-            <router-view />
-        </div>
-    </div>
+        <VMain>
+            <VContainer
+                fluid
+                class="content-wrapper"
+                :class="{ 'sidebar-collapsed': isSidebarCollapsed }"
+            >
+                <router-view />
+            </VContainer>
+        </VMain>
+    </VApp>
 </template>
