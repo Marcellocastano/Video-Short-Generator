@@ -50,115 +50,123 @@
     </div>
 </template>
 
-<script>
-    export default {
-        name: 'VideoPlayer',
-        props: {
-            src: {
-                type: String,
-                required: true,
-            },
-            showControls: {
-                type: Boolean,
-                default: true,
-            },
-            autoplay: {
-                type: Boolean,
-                default: false,
-            },
+<script setup>
+    import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
+
+    // Props definition
+    const props = defineProps({
+        src: {
+            type: String,
+            required: true,
         },
-        data() {
-            return {
-                isPlaying: false,
-                currentTime: 0,
-                duration: 0,
-                volume: 1,
-                isMuted: false,
-                progress: 0,
-                error: null,
-            };
+        showControls: {
+            type: Boolean,
+            default: true,
         },
-        computed: {
-            volumeIcon() {
-                if (this.volume === 0 || this.isMuted)
-                    return 'fas fa-volume-mute';
-                if (this.volume < 0.5) return 'fas fa-volume-down';
-                return 'fas fa-volume-up';
-            },
+        autoplay: {
+            type: Boolean,
+            default: false,
         },
-        methods: {
-            togglePlay() {
-                const video = this.$refs.videoRef;
-                if (video.paused) {
-                    video.play();
-                } else {
-                    video.pause();
-                }
-            },
-            toggleMute() {
-                const video = this.$refs.videoRef;
-                video.muted = !video.muted;
-                this.isMuted = video.muted;
-            },
-            seek(event) {
-                const video = this.$refs.videoRef;
-                const rect = event.target.getBoundingClientRect();
-                const percent = (event.clientX - rect.left) / rect.width;
-                video.currentTime = percent * video.duration;
-            },
-            toggleFullscreen() {
-                const video = this.$refs.videoRef;
-                if (!document.fullscreenElement) {
-                    video.requestFullscreen();
-                } else {
-                    document.exitFullscreen();
-                }
-            },
-            formatTime(seconds) {
-                const mins = Math.floor(seconds / 60);
-                const secs = Math.floor(seconds % 60);
-                return `${mins}:${secs.toString().padStart(2, '0')}`;
-            },
-            onLoadedMetadata() {
-                const video = this.$refs.videoRef;
-                this.duration = video.duration;
-                if (this.autoplay) {
-                    video.play();
-                }
-            },
-            updateProgress() {
-                const video = this.$refs.videoRef;
-                if (video) {
-                    this.currentTime = video.currentTime;
-                    this.progress = (video.currentTime / video.duration) * 100;
-                }
-            },
-            handleError(e) {
-                console.error('Errore video:', {
-                    error: e.target.error,
-                    src: this.src,
-                    networkState: e.target.networkState,
-                    readyState: e.target.readyState,
-                });
-                this.error = e.target.error;
-            },
-        },
-        watch: {
-            volume(newValue) {
-                const video = this.$refs.videoRef;
-                video.volume = newValue;
-                this.isMuted = newValue === 0;
-            },
-        },
-        mounted() {
-            const video = this.$refs.videoRef;
-            video.addEventListener('timeupdate', this.updateProgress);
-        },
-        beforeUnmount() {
-            const video = this.$refs.videoRef;
-            video.removeEventListener('timeupdate', this.updateProgress);
-        },
+    });
+
+    // Refs
+    const videoRef = ref(null);
+    const isPlaying = ref(false);
+    const currentTime = ref(0);
+    const duration = ref(0);
+    const volume = ref(1);
+    const isMuted = ref(false);
+    const progress = ref(0);
+    const error = ref(null);
+
+    // Computed
+    const volumeIcon = computed(() => {
+        if (volume.value === 0 || isMuted.value) return 'fas fa-volume-mute';
+        if (volume.value < 0.5) return 'fas fa-volume-down';
+        return 'fas fa-volume-up';
+    });
+
+    // Methods
+    const togglePlay = () => {
+        const video = videoRef.value;
+        if (video.paused) {
+            video.play();
+        } else {
+            video.pause();
+        }
     };
+
+    const toggleMute = () => {
+        const video = videoRef.value;
+        video.muted = !video.muted;
+        isMuted.value = video.muted;
+    };
+
+    const seek = event => {
+        const video = videoRef.value;
+        const rect = event.target.getBoundingClientRect();
+        const percent = (event.clientX - rect.left) / rect.width;
+        video.currentTime = percent * video.duration;
+    };
+
+    const toggleFullscreen = () => {
+        const video = videoRef.value;
+        if (!document.fullscreenElement) {
+            video.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+    };
+
+    const formatTime = seconds => {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const onLoadedMetadata = () => {
+        const video = videoRef.value;
+        duration.value = video.duration;
+        if (props.autoplay) {
+            video.play();
+        }
+    };
+
+    const updateProgress = () => {
+        const video = videoRef.value;
+        if (video) {
+            currentTime.value = video.currentTime;
+            progress.value = (video.currentTime / video.duration) * 100;
+        }
+    };
+
+    const handleError = e => {
+        console.error('Errore video:', {
+            error: e.target.error,
+            src: props.src,
+            networkState: e.target.networkState,
+            readyState: e.target.readyState,
+        });
+        error.value = e.target.error;
+    };
+
+    // Watch
+    watch(volume, newValue => {
+        const video = videoRef.value;
+        video.volume = newValue;
+        isMuted.value = newValue === 0;
+    });
+
+    // Lifecycle hooks
+    onMounted(() => {
+        const video = videoRef.value;
+        video.addEventListener('timeupdate', updateProgress);
+    });
+
+    onBeforeUnmount(() => {
+        const video = videoRef.value;
+        video.removeEventListener('timeupdate', updateProgress);
+    });
 </script>
 
 <style scoped>
@@ -243,7 +251,7 @@
     .volume-slider {
         width: 60px;
         height: 4px;
-        -webkit-appearance: none;
+        /* -webkit-appearance: none; */
         background: rgba(255, 255, 255, 0.3);
         border-radius: 2px;
         transition: width 0.2s ease;

@@ -103,217 +103,226 @@
     </div>
 </template>
 
-<script>
+<script setup>
+    import { ref, onMounted } from 'vue';
     import axios from 'axios';
     import DeleteVideoModal from '../components/DeleteVideoModal.vue';
     import VideoInfoModal from '../components/VideoInfoModal.vue';
     import VideoPlayer from '../components/VideoPlayer.vue';
     import PublishModal from '../components/PublishModal.vue';
 
-    export default {
-        name: 'VideoCollection',
-        components: {
-            DeleteVideoModal,
-            VideoInfoModal,
-            VideoPlayer,
-            PublishModal,
-        },
-        data() {
-            return {
-                videos: [],
-                activeMenu: null,
-                isPublishModalVisible: false,
-                selectedVideo: null,
-                showDeleteModal: false,
-                showInfoModal: false,
-                currentPage: 1,
-                totalPages: 1,
-                pageSize: 8,
-                totalVideos: 0,
-                baseUrl: 'http://localhost:3000', // URL base senza /api
-            };
-        },
-        methods: {
-            async fetchVideos() {
-                try {
-                    const apiUrl = `${this.baseUrl}/api/videos?page=${this.currentPage}&pageSize=${this.pageSize}`;
-                    const response = await axios.get(apiUrl);
+    // Stato
+    const videos = ref([]);
+    const activeMenu = ref(null);
+    const isPublishModalVisible = ref(false);
+    const selectedVideo = ref(null);
+    const showDeleteModal = ref(false);
+    const showInfoModal = ref(false);
+    const currentPage = ref(1);
+    const totalPages = ref(1);
+    const pageSize = ref(8);
+    const totalVideos = ref(0);
+    const baseUrl = 'http://localhost:3000';
 
-                    this.videos = response.data.videos.map(video => {
-                        const cleanPath = video.file_path
-                            .replace(/^\/uploads\/?/, '')
-                            .replace(/\/+/g, '/');
+    // Metodi
+    const fetchVideos = async () => {
+        try {
+            const apiUrl = `${baseUrl}/api/videos?page=${currentPage.value}&pageSize=${pageSize.value}`;
+            const response = await axios.get(apiUrl);
 
-                        return {
-                            ...video,
-                            file_path: `${this.baseUrl}/uploads/${cleanPath}`,
-                        };
-                    });
+            videos.value = response.data.videos.map(video => {
+                const cleanPath = video.file_path
+                    .replace(/^\/uploads\/?/, '')
+                    .replace(/\/+/g, '/');
 
-                    this.totalVideos = response.data.total;
-                    this.totalPages = Math.ceil(
-                        this.totalVideos / this.pageSize
-                    );
-                } catch (error) {
-                    console.error('Errore nel caricamento dei video:', error);
-                }
-            },
-            formatDate(date) {
-                if (!date) return 'Data non disponibile';
-                return new Date(date).toLocaleDateString('it-IT', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                });
-            },
-            toggleMenu(videoId) {
-                this.activeMenu = this.activeMenu === videoId ? null : videoId;
-            },
-            showVideoInfo(video) {
-                this.selectedVideo = video;
-                this.showInfoModal = true;
-                this.activeMenu = null;
-            },
-            showPublishModal(video) {
-                this.selectedVideo = video;
-                this.isPublishModalVisible = true;
-            },
-            async handlePublish(publishData) {
-                try {
-                    const response = await fetch(
-                        `${this.baseUrl}/api/videos/${publishData.videoId}/publish`,
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(publishData),
-                        }
-                    );
-
-                    if (!response.ok) {
-                        throw new Error('Failed to publish video');
-                    }
-
-                    // Aggiorna la lista dei video
-                    await this.fetchVideos();
-                } catch (error) {
-                    console.error('Error publishing video:', error);
-                    // TODO: Mostrare un messaggio di errore all'utente
-                }
-            },
-            isPublished(video) {
-                return video.publish_status === 'published';
-            },
-            showDeleteConfirm(video) {
-                this.selectedVideo = video;
-                this.showDeleteModal = true;
-                this.activeMenu = null;
-            },
-            async deleteVideo(videoId) {
-                if (confirm('Sei sicuro di voler eliminare questo video?')) {
-                    try {
-                        await axios.delete(
-                            `${this.baseUrl}/api/videos/${videoId}`
-                        );
-                        await this.fetchVideos();
-                    } catch (error) {
-                        console.error(
-                            "Errore durante l'eliminazione del video:",
-                            error
-                        );
-                    }
-                }
-                this.activeMenu = null;
-            },
-            async changePage(page) {
-                this.currentPage = page;
-                await this.fetchVideos();
-            },
-            getStatusClass(video) {
-                switch (video.publish_status) {
-                    case 'published':
-                        return 'published';
-                    case 'scheduled':
-                        return 'scheduled';
-                    case 'draft':
-                        return 'unpublished';
-                    default:
-                        return 'unpublished';
-                }
-            },
-            getStatusText(video) {
-                switch (video.publish_status) {
-                    case 'published':
-                        return 'Pubblicato';
-                    case 'scheduled':
-                        return 'Programmato';
-                    case 'draft':
-                        return 'Non pubblicato';
-                    default:
-                        return 'Non pubblicato';
-                }
-            },
-            getStatusTooltip(video) {
-                if (video.publish_status === 'scheduled' && video.publish_at) {
-                    return `Programmato per: ${this.formatDate(video.publish_at)}`;
-                }
-                return '';
-            },
-        },
-        mounted() {
-            this.fetchVideos();
-            // Chiudi il menu quando si clicca fuori
-            document.addEventListener('click', e => {
-                if (!e.target.closest('.video-actions')) {
-                    this.activeMenu = null;
-                }
+                return {
+                    ...video,
+                    file_path: `${baseUrl}/uploads/${cleanPath}`,
+                };
             });
-        },
+
+            totalVideos.value = response.data.total;
+            totalPages.value = Math.ceil(totalVideos.value / pageSize.value);
+        } catch (error) {
+            console.error('Errore nel caricamento dei video:', error);
+        }
     };
+
+    const formatDate = date => {
+        if (!date) return 'Data non disponibile';
+        return new Date(date).toLocaleDateString('it-IT', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    };
+
+    const toggleMenu = videoId => {
+        activeMenu.value = activeMenu.value === videoId ? null : videoId;
+    };
+
+    const showVideoInfo = video => {
+        selectedVideo.value = video;
+        showInfoModal.value = true;
+        activeMenu.value = null;
+    };
+
+    const showPublishModal = video => {
+        selectedVideo.value = video;
+        isPublishModalVisible.value = true;
+    };
+
+    const handlePublish = async publishData => {
+        try {
+            const response = await fetch(
+                `${baseUrl}/api/videos/${publishData.videoId}/publish`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(publishData),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to publish video');
+            }
+
+            await fetchVideos();
+        } catch (error) {
+            console.error('Error publishing video:', error);
+        } finally {
+            isPublishModalVisible.value = false;
+        }
+    };
+
+    const isPublished = video => {
+        return video.youtube_id && video.publish_status === 'published';
+    };
+
+    const showDeleteConfirm = video => {
+        selectedVideo.value = video;
+        showDeleteModal.value = true;
+        activeMenu.value = null;
+    };
+
+    const changePage = page => {
+        currentPage.value = page;
+        fetchVideos();
+    };
+
+    const getStatusClass = video => {
+        if (video.youtube_id) {
+            if (video.publish_status === 'published') {
+                return 'status-published';
+            } else if (video.publish_status === 'scheduled') {
+                return 'status-scheduled';
+            }
+        }
+        return 'status-draft';
+    };
+
+    const getStatusText = video => {
+        if (video.youtube_id) {
+            if (video.publish_status === 'published') {
+                return 'Pubblicato';
+            } else if (video.publish_status === 'scheduled') {
+                return 'Programmato';
+            }
+        }
+        return 'Bozza';
+    };
+
+    const getStatusTooltip = video => {
+        if (video.publish_status === 'scheduled' && video.publish_at) {
+            return `Programmato per: ${formatDate(video.publish_at)}`;
+        }
+        return '';
+    };
+
+    // Lifecycle hooks
+    onMounted(() => {
+        fetchVideos();
+        // Chiudi il menu quando si clicca fuori
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.video-actions')) {
+                activeMenu.value = null;
+            }
+        });
+    });
 </script>
 
 <style scoped>
     .video-collection {
-        padding: 20px;
-        margin-left: var(--sidebar-width);
-        transition: margin-left 0.3s ease;
+        padding: 2rem;
     }
 
     .video-grid {
-        display: flex;
-        gap: 20px;
-        margin-top: 20px;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
     }
 
     .video-card {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        background: white;
         border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        transition: transform 0.2s ease;
-        width: 350px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
     }
 
     .video-card:hover {
-        transform: translateY(-5px);
+        transform: translateY(-2px);
     }
 
     .video-thumbnail {
         position: relative;
         width: 100%;
+        background: #f0f0f0;
+    }
+
+    .video-info {
+        padding: 1rem;
+    }
+
+    .video-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+    }
+
+    .video-header h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: #333;
+        flex: 1;
+        margin-right: 1rem;
+    }
+
+    .video-metadata {
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .video-metadata span {
+        margin-right: 1rem;
+    }
+
+    .video-metadata i {
+        margin-right: 0.5rem;
     }
 
     .video-actions {
         position: absolute;
-        top: 8px;
-        right: 8px;
+        top: 0.5rem;
+        right: 0.5rem;
+        z-index: 10;
     }
 
     .action-menu {
@@ -327,143 +336,121 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        transition: background-color 0.2s;
+    }
+
+    .action-menu:hover {
+        background: rgba(0, 0, 0, 0.7);
     }
 
     .action-dropdown {
         position: absolute;
-        top: 40px;
+        top: 100%;
         right: 0;
         background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         overflow: hidden;
-        z-index: 1000;
+        min-width: 150px;
     }
 
     .action-dropdown button {
         display: block;
         width: 100%;
-        padding: 8px 16px;
+        padding: 0.75rem 1rem;
+        text-align: left;
         border: none;
         background: none;
-        text-align: left;
         cursor: pointer;
-        white-space: nowrap;
+        color: #333;
+        font-size: 0.9rem;
+        transition: background-color 0.2s;
     }
 
     .action-dropdown button:hover {
-        background: #f5f5f5;
+        background-color: #f5f5f5;
     }
 
-    .action-dropdown .delete-btn {
+    .action-dropdown button.delete-btn {
         color: #dc3545;
     }
 
-    .action-dropdown .delete-btn:hover {
-        background: #ffebee;
+    .action-dropdown button.delete-btn:hover {
+        background-color: #fff5f5;
     }
 
-    .video-info {
-        padding: 15px;
-    }
-
-    .video-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 0.5rem;
-    }
-
-    .video-header h3 {
-        margin: 0;
-        flex: 1;
-    }
-
-    .status-tag {
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        font-weight: 500;
-        min-width: 90px;
-        text-align: center;
-        position: relative;
-    }
-
-    .status-tag[data-tooltip]:hover::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        top: -30px;
-        right: 0;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 0.75rem;
-        white-space: nowrap;
-        z-index: 10;
-    }
-
-    .status-tag[data-tooltip]:hover::before {
-        content: '';
-        position: absolute;
-        top: -8px;
-        right: 15px;
-        border: 5px solid transparent;
-        border-top-color: rgba(0, 0, 0, 0.8);
-    }
-
-    .status-tag.published {
-        background-color: #4caf50;
-        color: white;
-    }
-
-    .status-tag.scheduled {
-        background-color: #ffc107;
-        color: black;
-    }
-
-    .status-tag.unpublished {
-        background-color: #f44336;
-        color: white;
-    }
-
-    .video-metadata {
-        display: flex;
-        gap: 15px;
-        font-size: 0.8em;
-        color: #888;
-    }
-
-    .video-metadata i {
-        margin-right: 5px;
+    .action-dropdown button i {
+        margin-right: 0.5rem;
+        width: 16px;
     }
 
     .pagination {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-top: 30px;
-        gap: 15px;
+        margin-top: 2rem;
+        gap: 1rem;
     }
 
     .page-btn {
-        background: rgba(40, 44, 52, 0.7);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        padding: 8px 15px;
+        background: #f0f0f0;
+        border: none;
         border-radius: 4px;
+        padding: 0.5rem 1rem;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: background-color 0.2s;
     }
 
     .page-btn:disabled {
-        background: rgba(204, 204, 204, 0.7);
+        opacity: 0.5;
         cursor: not-allowed;
     }
 
     .page-btn:not(:disabled):hover {
-        background: rgba(40, 44, 52, 0.9);
+        background: #e0e0e0;
+    }
+
+    .page-info {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .status-tag {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-weight: 500;
+        position: relative;
+    }
+
+    .status-draft {
+        background-color: #f0f0f0;
+        color: #666;
+    }
+
+    .status-published {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .status-scheduled {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    [data-tooltip]:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        z-index: 1000;
+        margin-bottom: 5px;
     }
 </style>

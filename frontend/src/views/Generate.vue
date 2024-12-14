@@ -183,37 +183,51 @@
 </template>
 
 <script setup>
-    import { ref, watchEffect } from 'vue';
+    import { ref, watchEffect, computed } from 'vue';
     import VideoSelector from '../components/VideoSelector.vue';
     import SearchModal from '../components/SearchModal.vue';
     import MusicSelector from '../components/MusicSelector.vue';
     import PublishModal from '../components/PublishModal.vue';
 
-    const baseUrl = 'http://localhost:3000'; // URL base dell'API
+    // Constants
+    const baseUrl = 'http://localhost:3000';
+
+    // Refs for form inputs
     const text = ref('');
-    const selectedVideos = ref([]);
+    const videoTitle = ref('');
+    const videoDescription = ref('');
     const language = ref('en-US');
     const voice = ref('male');
-    const generating = ref(false);
-    const generationProgress = ref(0);
-    const generationStep = ref('');
-    const error = ref(null);
+    const musicSearchQuery = ref('');
+
+    // Refs for video selection
+    const selectedVideos = ref([]);
     const videoSelector = ref(null);
     const showSearchModal = ref(false);
     const searchResults = ref([]);
     const currentSearchQuery = ref('');
+
+    // Refs for music selection
     const selectedMusic = ref(null);
     const showMusicModal = ref(false);
     const musicSearchResults = ref([]);
-    const musicSearchQuery = ref('');
+
+    // Refs for video generation and saving
+    const generating = ref(false);
+    const generationProgress = ref(0);
+    const generationStep = ref('');
+    const error = ref(null);
     const generatedVideoUrl = ref('');
     const saving = ref(false);
-    const videoTitle = ref('');
-    const videoDescription = ref('');
-    const showPublishModal = ref(false);
     const savedVideo = ref(null);
+    const showPublishModal = ref(false);
 
-    // Esponiamo le funzioni globalmente per il VideoSelector
+    // Computed properties
+    const canGenerate = computed(
+        () => text.value.trim() && selectedVideos.value.length > 0
+    );
+
+    // Global functions for VideoSelector
     window.$app = {
         showSearchResults(query, results) {
             currentSearchQuery.value = query;
@@ -222,6 +236,7 @@
         },
     };
 
+    // Video selection handlers
     const handleVideoSelection = videos => {
         selectedVideos.value = videos;
     };
@@ -243,20 +258,14 @@
         }
     };
 
-    const canGenerate = ref(false);
-
-    watchEffect(() => {
-        canGenerate.value =
-            text.value.trim() && selectedVideos.value.length > 0;
-    });
-
+    // Music selection handlers
     const handleMusicSelected = music => {
         selectedMusic.value = {
             title: music.title,
             artist: music.artist,
-            url: music.audiodownload || music.audio || music.preview_url, // Aggiungiamo più opzioni per l'URL
+            url: music.audiodownload || music.audio || music.preview_url,
         };
-        console.log('Selected music:', selectedMusic.value); // Aggiungiamo log per debug
+        console.log('Selected music:', selectedMusic.value);
         showMusicModal.value = false;
     };
 
@@ -265,9 +274,8 @@
             const response = await fetch(
                 `/api/music/search?query=${encodeURIComponent(musicSearchQuery.value)}`
             );
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+            if (!response.ok) throw new Error('Network response was not ok');
+
             const data = await response.json();
             musicSearchResults.value = data;
             showMusicModal.value = true;
@@ -276,6 +284,7 @@
         }
     };
 
+    // Video download and save handlers
     const downloadVideo = async url => {
         try {
             const response = await fetch(url);
@@ -295,15 +304,14 @@
     };
 
     const saveVideoToDb = async () => {
-        try {
-            if (!videoTitle.value) {
-                alert('Per favore inserisci un titolo per il video');
-                return;
-            }
+        if (!videoTitle.value) {
+            alert('Per favore inserisci un titolo per il video');
+            return;
+        }
 
+        try {
             saving.value = true;
 
-            // Ottieni il file video dall'URL
             const response = await fetch(generatedVideoUrl.value);
             const blob = await response.blob();
 
@@ -322,12 +330,10 @@
             }
 
             const result = await saveResponse.json();
-
             if (!result.success) {
                 throw new Error(result.message || 'Failed to save video');
             }
 
-            // Costruisci l'oggetto video con l'ID restituito dal backend
             const savedVideoData = {
                 id: result.videoId,
                 title: videoTitle.value,
@@ -346,14 +352,12 @@
         }
     };
 
+    // Publishing handlers
     const publishVideo = async () => {
         try {
-            // Prima salva il video se non è già stato salvato
             if (!savedVideo.value) {
                 savedVideo.value = await saveVideoToDb();
             }
-
-            // Apri la modale di pubblicazione
             showPublishModal.value = true;
         } catch (error) {
             console.error('Error preparing video for publishing:', error);
@@ -381,31 +385,28 @@
             }
 
             const result = await response.json();
-            alert('Video pubblicato con successo su YouTube!');
-
-            // Resetta lo stato
-            showPublishModal.value = false;
-            savedVideo.value = null;
-            generatedVideoUrl.value = null;
-            videoTitle.value = '';
-            videoDescription.value = '';
-            selectedVideos.value = [];
-            selectedMusic.value = null;
+            if (result.success) {
+                alert('Video pubblicato con successo su YouTube!');
+                showPublishModal.value = false;
+            } else {
+                throw new Error(result.message || 'Failed to publish video');
+            }
         } catch (error) {
             console.error('Error publishing video:', error);
             alert(
-                'Si è verificato un errore durante la pubblicazione del video.'
+                'Errore durante la pubblicazione del video: ' + error.message
             );
         }
     };
 
+    // Video generation handler
     const generateVideo = async () => {
         if (!canGenerate.value || generating.value) return;
 
         generating.value = true;
         generationProgress.value = 0;
         error.value = null;
-        generatedVideoUrl.value = ''; // Reset dell'URL del video
+        generatedVideoUrl.value = '';
 
         try {
             const videoData = {
@@ -447,7 +448,8 @@
                 for (const line of lines) {
                     try {
                         const data = JSON.parse(line);
-                        console.log('Received data:', data); // Aggiungiamo un log per debug
+                        console.log('Received data:', data);
+
                         if (data.progress !== undefined) {
                             generationProgress.value = data.progress;
                         }
@@ -458,7 +460,7 @@
                             throw new Error(data.error);
                         }
                         if (data.videoUrl) {
-                            console.log('Video URL received:', data.videoUrl); // Log per debug
+                            console.log('Video URL received:', data.videoUrl);
                             generatedVideoUrl.value = data.videoUrl;
                         }
                     } catch (e) {

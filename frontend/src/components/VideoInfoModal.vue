@@ -29,16 +29,46 @@
                         </p>
                     </div>
                     <div class="info-item">
+                        <label>Stato</label>
+                        <p>{{ videoInfo.status || 'Non specificato' }}</p>
+                    </div>
+                    <div class="info-item">
+                        <label>Pubblicazione</label>
+                        <p>
+                            {{ videoInfo.publish_status || 'Non specificato' }}
+                        </p>
+                    </div>
+                    <div class="info-item">
+                        <label>Privacy YouTube</label>
+                        <p>
+                            {{ videoInfo.youtube_privacy || 'Non specificato' }}
+                        </p>
+                    </div>
+                    <div class="info-item">
+                        <label>ID YouTube</label>
+                        <p>{{ videoInfo.youtube_id || 'Non disponibile' }}</p>
+                    </div>
+                    <div class="info-item">
                         <label>Hashtag</label>
                         <p>
                             {{ formatHashtags(videoInfo.metadata?.hashtags) }}
                         </p>
                     </div>
                     <div class="info-item">
-                        <label>Privacy</label>
+                        <label>Lingua</label>
                         <p>
                             {{
-                                videoInfo.metadata?.privacy || 'Non specificata'
+                                videoInfo.metadata?.language ||
+                                'Non specificata'
+                            }}
+                        </p>
+                    </div>
+                    <div class="info-item">
+                        <label>Nome Originale</label>
+                        <p>
+                            {{
+                                videoInfo.metadata?.originalName ||
+                                'Non specificato'
                             }}
                         </p>
                     </div>
@@ -55,85 +85,136 @@
     </div>
 </template>
 
-<script>
+<script setup>
+    import { ref, watch } from 'vue';
     import axios from 'axios';
 
-    export default {
-        name: 'VideoInfoModal',
-        props: {
-            show: {
-                type: Boolean,
-                required: true,
-            },
-            videoId: {
-                type: Number,
-                required: true,
-            },
+    // Props definition
+    const props = defineProps({
+        show: {
+            type: Boolean,
+            required: true,
         },
-        data() {
-            return {
-                videoInfo: null,
-                loading: false,
-                error: null,
-            };
+        videoId: {
+            type: Number,
+            required: true,
         },
-        watch: {
-            show(newVal) {
-                if (newVal) {
-                    this.fetchVideoInfo();
-                }
-            },
-        },
-        methods: {
-            async fetchVideoInfo() {
-                this.loading = true;
-                this.error = null;
-                try {
-                    const response = await axios.get(
-                        `/api/videos/${this.videoId}`
-                    );
-                    this.videoInfo = response.data;
-                } catch (error) {
-                    console.error(
-                        'Errore nel caricamento delle informazioni:',
-                        error
-                    );
-                    this.error =
-                        'Errore nel caricamento delle informazioni del video';
-                } finally {
-                    this.loading = false;
-                }
-            },
-            formatDate(date) {
-                if (!date) return 'Data non disponibile';
-                return new Date(date).toLocaleDateString('it-IT', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                });
-            },
-            formatHashtags(hashtags) {
-                if (!hashtags || !hashtags.length) return 'Nessun hashtag';
-                return hashtags.map(tag => `#${tag}`).join(' ');
-            },
-            formatSize(bytes) {
-                if (!bytes) return 'Dimensione non disponibile';
-                const units = ['B', 'KB', 'MB', 'GB'];
-                let size = bytes;
-                let unitIndex = 0;
-                while (size >= 1024 && unitIndex < units.length - 1) {
-                    size /= 1024;
-                    unitIndex++;
-                }
-                return `${size.toFixed(2)} ${units[unitIndex]}`;
-            },
-            closeModal() {
-                this.$emit('update:show', false);
-            },
-        },
+    });
+
+    // Emits definition
+    const emit = defineEmits(['update:show']);
+
+    // State
+    const videoInfo = ref(null);
+    const loading = ref(false);
+    const error = ref(null);
+
+    // Methods
+    const fetchVideoInfo = async () => {
+        loading.value = true;
+        error.value = null;
+        try {
+            const response = await axios.get(`/api/videos/${props.videoId}`);
+            if (response.data) {
+                const data = response.data.video;
+                console.log('Dati video:', data);
+                // Parse metadata if it's a string
+                const metadata =
+                    typeof data.metadata === 'string'
+                        ? JSON.parse(data.metadata)
+                        : data.metadata;
+
+                videoInfo.value = {
+                    title: data.title || 'Non specificato',
+                    created_at: data.created_at,
+                    description: data.description || 'Nessuna descrizione',
+                    status: data.status || 'Non specificato',
+                    publish_status: data.publish_status || 'Non specificato',
+                    youtube_privacy: data.youtube_privacy || 'Non specificato',
+                    youtube_id: data.youtube_id || 'Non disponibile',
+                    metadata: {
+                        hashtags: metadata?.hashtags || [],
+                        privacy: metadata?.privacy || 'Non specificata',
+                        language: metadata?.language || 'Non specificata',
+                        originalName:
+                            metadata?.originalName || 'Non specificato',
+                        size: metadata?.size || 0,
+                    },
+                };
+            } else {
+                throw new Error('Dati video non disponibili');
+            }
+        } catch (err) {
+            console.error('Errore nel caricamento delle informazioni:', err);
+            error.value = 'Errore nel caricamento delle informazioni del video';
+            videoInfo.value = null;
+        } finally {
+            loading.value = false;
+        }
     };
+
+    const formatDate = date => {
+        if (!date) return 'Data non disponibile';
+        try {
+            return new Date(date).toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            });
+        } catch (err) {
+            console.error('Errore nella formattazione della data:', err);
+            return 'Data non valida';
+        }
+    };
+
+    const formatHashtags = hashtags => {
+        if (!hashtags || !Array.isArray(hashtags) || hashtags.length === 0) {
+            // Try to extract hashtags from description if available
+            if (videoInfo.value?.description) {
+                const matches = videoInfo.value.description.match(/#\w+/g);
+                if (matches) {
+                    return matches.join(' ');
+                }
+            }
+            return 'Nessun hashtag';
+        }
+        return hashtags.map(tag => `#${tag}`).join(' ');
+    };
+
+    const formatSize = bytes => {
+        if (!bytes || isNaN(bytes)) return 'Dimensione non disponibile';
+        try {
+            const units = ['B', 'KB', 'MB', 'GB'];
+            let size = parseFloat(bytes);
+            let unitIndex = 0;
+
+            while (size >= 1024 && unitIndex < units.length - 1) {
+                size /= 1024;
+                unitIndex++;
+            }
+
+            return `${size.toFixed(2)} ${units[unitIndex]}`;
+        } catch (err) {
+            console.error('Errore nel calcolo della dimensione:', err);
+            return 'Dimensione non valida';
+        }
+    };
+
+    const closeModal = () => {
+        emit('update:show', false);
+    };
+
+    // Watch for show prop changes
+    watch(
+        () => props.show,
+        newVal => {
+            if (newVal) {
+                fetchVideoInfo();
+            }
+        }
+    );
 </script>
 
 <style scoped>
