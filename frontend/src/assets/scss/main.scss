@@ -8,19 +8,39 @@
     line-height: $line-height-base;
     font-weight: $font-weight-base;
 
-    color-scheme: light dark;
-    color: $light-text;
-    background-color: $dark-bg;
-
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
 
-    @include light-mode {
-        color: $dark-text;
-        background-color: $light-bg;
+body {
+    margin: 0;
+    min-width: $breakpoint-mobile;
+    min-height: 100vh;
+}
+
+.v-theme--dark {
+    #app,
+    body {
+        background-color: $dark-theme-bg;
+        color: $light-text;
     }
+}
+
+.v-theme--light {
+    #app,
+    body {
+        background-color: $light-bg;
+        color: $dark-text;
+    }
+}
+
+#app {
+    width: 100%;
+    min-height: 100vh;
+    padding: $spacing-lg;
+    text-align: center;
 }
 
 a {
@@ -33,13 +53,6 @@ a {
     }
 }
 
-body {
-    margin: 0;
-    @include flex-center;
-    min-width: $breakpoint-mobile;
-    min-height: 100vh;
-}
-
 h1 {
     font-size: 3.2em;
     line-height: 1.1;
@@ -47,22 +60,18 @@ h1 {
 
 button {
     @include button-base;
-    background-color: $button-bg-dark;
 
-    @include light-mode {
+    .v-theme--dark & {
+        background-color: $button-bg-dark;
+    }
+
+    .v-theme--light & {
         background-color: $button-bg-light;
     }
 }
 
 .card {
     padding: $spacing-lg;
-}
-
-#app {
-    max-width: $max-width-container;
-    margin: 0 auto;
-    padding: $spacing-lg;
-    text-align: center;
 }
 
 .primary-border {

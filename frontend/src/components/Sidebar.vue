@@ -48,17 +48,67 @@
                 >
             </v-list-item>
         </v-list>
+
+        <template v-slot:append>
+            <div class="d-flex justify-center pa-2">
+                <template v-if="isCollapsed">
+                    <v-btn
+                        :icon="
+                            isDark ? 'mdi-weather-night' : 'mdi-weather-sunny'
+                        "
+                        variant="text"
+                        color="white"
+                        density="comfortable"
+                        @click="toggleTheme"
+                        class="theme-btn"
+                    />
+                </template>
+                <template v-else>
+                    <v-switch
+                        v-model="isDark"
+                        color="white"
+                        hide-details
+                        class="theme-switch"
+                        density="compact"
+                    >
+                        <template v-slot:prepend>
+                            <v-icon color="white" size="small">
+                                mdi-weather-sunny
+                            </v-icon>
+                        </template>
+                        <template v-slot:append>
+                            <v-icon color="white" size="small">
+                                mdi-weather-night
+                            </v-icon>
+                        </template>
+                    </v-switch>
+                </template>
+            </div>
+        </template>
     </v-navigation-drawer>
 </template>
 
 <script setup>
     import { ref, computed } from 'vue';
+    import { useTheme } from 'vuetify';
 
+    const theme = useTheme();
     const drawer = ref(true);
     const isCollapsed = ref(false);
 
+    const isDark = computed({
+        get: () => theme.global.current.value.dark,
+        set: value => {
+            theme.global.name.value = value ? 'dark' : 'light';
+        },
+    });
+
     const toggleSidebar = () => {
         isCollapsed.value = !isCollapsed.value;
+    };
+
+    const toggleTheme = () => {
+        isDark.value = !isDark.value;
     };
 </script>
 
@@ -78,6 +128,14 @@
     }
 
     .toggle-btn:hover {
+        background: rgba(255, 255, 255, 0.15) !important;
+    }
+
+    .theme-btn {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .theme-btn:hover {
         background: rgba(255, 255, 255, 0.15) !important;
     }
 
@@ -107,5 +165,13 @@
     .custom-list-item:hover :deep(.v-list-item__prepend),
     .custom-list-item:hover :deep(.v-list-item__content) {
         opacity: 1;
+    }
+
+    :deep(.theme-switch .v-switch__track) {
+        opacity: 0.3;
+    }
+
+    :deep(.theme-switch .v-switch__thumb) {
+        color: white;
     }
 </style>

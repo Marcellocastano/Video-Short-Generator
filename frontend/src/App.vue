@@ -16,7 +16,6 @@
         <VMain>
             <VContainer
                 fluid
-                class="content-wrapper"
                 :class="{ 'sidebar-collapsed': isSidebarCollapsed }"
             >
                 <router-view />
