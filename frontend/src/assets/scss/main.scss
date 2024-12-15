@@ -79,3 +79,14 @@ button {
 .primary-border {
     border: 2px solid rgb(var(--v-theme-primary));
 }
+
+.status-chip {
+    position: absolute;
+    top: 16px;
+    left: 10px;
+}
+
+.logo-container-collapsed img {
+    width: 55px;
+    margin-bottom: 20px;
+}

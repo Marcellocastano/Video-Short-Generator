@@ -18,6 +18,12 @@
         </div>
 
         <v-list>
+            <div v-if="!isCollapsed" class="logo-container">
+                <img src="../assets/logo.png" alt="Logo" />
+            </div>
+            <div v-else class="logo-container-collapsed">
+                <img src="../assets/favicon.png" alt="Logo" />
+            </div>
             <v-list-item
                 to="/generate"
                 prepend-icon="mdi-video"

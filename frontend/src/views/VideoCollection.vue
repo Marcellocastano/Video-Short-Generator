@@ -30,7 +30,9 @@
                                     v-bind="props"
                                     class="position-absolute top-0 end-0 ma-2 right-0"
                                     :color="
-                                        $vuetify.theme.dark ? 'white' : 'black'
+                                        $vuetify.theme.name === 'dark'
+                                            ? 'white'
+                                            : 'black'
                                     "
                                 ></v-btn>
                             </template>
@@ -68,6 +70,14 @@
                                 </v-list-item>
                             </v-list>
                         </v-menu>
+                        <v-chip
+                            :color="getStatusColor(video)"
+                            size="small"
+                            :title="getStatusTooltip(video)"
+                            class="status-chip"
+                        >
+                            {{ getStatusText(video) }}
+                        </v-chip>
                     </div>
 
                     <v-card-text>
@@ -77,13 +87,6 @@
                             <div class="text-h6 text-truncate">
                                 {{ video.title || 'Video senza titolo' }}
                             </div>
-                            <v-chip
-                                :color="getStatusColor(video)"
-                                size="small"
-                                :title="getStatusTooltip(video)"
-                            >
-                                {{ getStatusText(video) }}
-                            </v-chip>
                         </div>
                         <p class="text-body-2 text-truncate mb-2">
                             {{ video.description || 'Nessuna descrizione' }}

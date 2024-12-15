@@ -1,47 +1,57 @@
 <template>
-    <v-dialog
+    <v-overlay
         :model-value="show"
-        @update:model-value="$emit('update:show', $event)"
-        :fullscreen="fullscreen"
-        :width="width"
-        :persistent="persistent"
-        :scrim="false"
-        :transition="transition"
+        class="align-center justify-center"
+        scrim="black"
+        scroll-strategy="block"
     >
-        <v-card :class="{ 'modal-fullheight': fullheight }">
-            <!-- Header Slot o Default Header -->
-            <v-toolbar
-                v-if="!hideHeader"
-                :color="headerColor"
-                :dark="darkHeader"
-            >
-                <slot name="header">
-                    <v-toolbar-title>{{ title }}</v-toolbar-title>
-                </slot>
-                <v-spacer></v-spacer>
-                <slot name="header-actions">
-                    <v-btn
-                        v-if="!hideCloseButton"
-                        icon
-                        @click="close"
-                        :color="$vuetify.theme.dark ? 'white' : 'black'"
-                    >
-                        <v-icon>mdi-close</v-icon>
-                    </v-btn>
-                </slot>
-            </v-toolbar>
+        <v-dialog
+            :model-value="show"
+            @update:model-value="$emit('update:show', $event)"
+            :fullscreen="fullscreen"
+            :width="width"
+            :persistent="persistent"
+            :scrim="false"
+            :transition="transition"
+        >
+            <v-card :class="{ 'modal-fullheight': fullheight }">
+                <!-- Header Slot o Default Header -->
+                <v-toolbar
+                    v-if="!hideHeader"
+                    :color="headerColor"
+                    :dark="darkHeader"
+                >
+                    <slot name="header">
+                        <v-toolbar-title>{{ title }}</v-toolbar-title>
+                    </slot>
+                    <v-spacer></v-spacer>
+                    <slot name="header-actions">
+                        <v-btn
+                            v-if="!hideCloseButton"
+                            icon
+                            @click="close"
+                            :color="
+                                $vuetify.theme.name === 'dark'
+                                    ? 'white'
+                                    : 'black'
+                            "
+                        >
+                            <v-icon>mdi-close</v-icon>
+                        </v-btn>
+                    </slot>
+                </v-toolbar>
+                <!-- Content Slot -->
+                <v-card-text :class="contentClass">
+                    <slot></slot>
+                </v-card-text>
 
-            <!-- Content Slot -->
-            <v-card-text :class="contentClass">
-                <slot></slot>
-            </v-card-text>
-
-            <!-- Footer Slot -->
-            <v-card-actions v-if="$slots.footer">
-                <slot name="footer"></slot>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+                <!-- Footer Slot -->
+                <v-card-actions v-if="$slots.footer">
+                    <slot name="footer"></slot>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+    </v-overlay>
 </template>
 
 <script setup>

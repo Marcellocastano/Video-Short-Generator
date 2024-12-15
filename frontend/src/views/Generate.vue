@@ -1,9 +1,5 @@
 <template>
     <v-container class="generate-page">
-        <div class="logo-container">
-            <img src="../assets/logo.png" alt="Logo" />
-        </div>
-
         <v-card class="glass-container">
             <v-card-text class="content">
                 <div class="generate-container">
