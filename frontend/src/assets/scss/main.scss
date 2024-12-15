@@ -1,7 +1,6 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 @use 'components';
-@use 'views';
 
 :root {
     font-family: $font-family-base;
@@ -20,26 +19,29 @@ body {
     min-height: 100vh;
 }
 
-.v-theme--dark {
-    #app,
-    body {
-        background-color: $dark-theme-bg;
-        color: $light-text;
-    }
+.v-theme--dark.v-application {
+    background: rgb(27, 114, 172);
+    background: linear-gradient(
+        221deg,
+        rgba(27, 114, 172, 1) 0%,
+        rgba(22, 55, 116, 1) 50%
+    );
+    color: $light-text;
 }
 
-.v-theme--light {
-    #app,
-    body {
-        background-color: $light-bg;
-        color: $dark-text;
-    }
+.v-theme--light.v-application {
+    background: rgb(140, 197, 235);
+    background: linear-gradient(
+        221deg,
+        rgba(140, 197, 235, 1) 0%,
+        rgb(47, 130, 185) 50%
+    );
+    color: $dark-text;
 }
 
 #app {
     width: 100%;
     min-height: 100vh;
-    padding: $spacing-lg;
     text-align: center;
 }
 

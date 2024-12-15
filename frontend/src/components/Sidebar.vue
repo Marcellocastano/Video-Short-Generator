@@ -89,22 +89,32 @@
 </template>
 
 <script setup>
-    import { ref, computed } from 'vue';
+    import { ref, computed, onMounted } from 'vue';
     import { useTheme } from 'vuetify';
 
     const theme = useTheme();
     const drawer = ref(true);
-    const isCollapsed = ref(false);
+    const isCollapsed = ref(
+        localStorage.getItem('sidebarCollapsed') === 'true'
+    );
+
+    // Initialize theme from localStorage or default to dark
+    onMounted(() => {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        theme.global.name.value = savedTheme;
+    });
 
     const isDark = computed({
         get: () => theme.global.current.value.dark,
         set: value => {
             theme.global.name.value = value ? 'dark' : 'light';
+            localStorage.setItem('theme', value ? 'dark' : 'light');
         },
     });
 
     const toggleSidebar = () => {
         isCollapsed.value = !isCollapsed.value;
+        localStorage.setItem('sidebarCollapsed', isCollapsed.value.toString());
     };
 
     const toggleTheme = () => {

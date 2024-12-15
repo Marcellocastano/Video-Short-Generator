@@ -8,7 +8,7 @@
     border: 1px solid $dark-theme-border;
     border-radius: $border-radius-lg;
     margin: 0 auto;
-
+    color: $light-text;
     @media (max-width: $breakpoint-lg) {
         min-width: unset;
         width: 100%;

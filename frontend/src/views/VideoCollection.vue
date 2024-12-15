@@ -29,7 +29,9 @@
                                     variant="text"
                                     v-bind="props"
                                     class="position-absolute top-0 end-0 ma-2 right-0"
-                                    color="white"
+                                    :color="
+                                        $vuetify.theme.dark ? 'white' : 'black'
+                                    "
                                 ></v-btn>
                             </template>
 

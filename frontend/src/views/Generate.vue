@@ -410,50 +410,80 @@
 
             console.log('Sending video data:', videoData);
 
+            // Increase timeout to 15 minutes for very long videos
             const response = await fetch('/api/videos/generate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(videoData),
+                signal: AbortSignal.timeout(15 * 60 * 1000), // 15 minutes timeout
             });
 
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                const errorText = await response.text();
+                console.error('Server error:', errorText);
+                throw new Error(
+                    `Server error: ${response.status} - ${errorText}`
+                );
             }
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        console.log('Stream completed successfully');
+                        break;
+                    }
 
-                const text = decoder.decode(value);
-                const lines = text.split('\n').filter(line => line.trim());
+                    const text = decoder.decode(value);
+                    const lines = text.split('\n').filter(line => line.trim());
 
-                for (const line of lines) {
-                    try {
-                        const data = JSON.parse(line);
-                        console.log('Received data:', data);
+                    for (const line of lines) {
+                        try {
+                            const data = JSON.parse(line);
+                            console.log('Received data:', data);
 
-                        if (data.progress !== undefined) {
-                            generationProgress.value = data.progress;
+                            if (data.progress !== undefined) {
+                                generationProgress.value = data.progress;
+                            }
+                            if (data.step) {
+                                generationStep.value = data.step;
+                                console.log('Current step:', data.step);
+                            }
+                            if (data.error) {
+                                throw new Error(data.error);
+                            }
+                            if (data.videoUrl) {
+                                console.log(
+                                    'Video URL received:',
+                                    data.videoUrl
+                                );
+                                generatedVideoUrl.value = data.videoUrl;
+                                // Successfully received video URL, we can break the stream
+                                return;
+                            }
+                        } catch (e) {
+                            if (e instanceof SyntaxError) {
+                                // Log but don't throw for JSON parse errors
+                                console.warn('Invalid JSON in stream:', e);
+                                continue;
+                            }
+                            throw e;
                         }
-                        if (data.step) {
-                            generationStep.value = data.step;
-                        }
-                        if (data.error) {
-                            throw new Error(data.error);
-                        }
-                        if (data.videoUrl) {
-                            console.log('Video URL received:', data.videoUrl);
-                            generatedVideoUrl.value = data.videoUrl;
-                        }
-                    } catch (e) {
-                        console.error('Error parsing line:', e);
                     }
                 }
+            } catch (streamError) {
+                console.error('Stream error:', streamError);
+                if (streamError.name === 'AbortError') {
+                    throw new Error(
+                        'Video generation is taking longer than expected. Please check the generated video in your profile after a few minutes.'
+                    );
+                }
+                throw streamError;
             }
         } catch (err) {
             error.value = err.message;

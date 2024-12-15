@@ -20,7 +20,12 @@
                 </slot>
                 <v-spacer></v-spacer>
                 <slot name="header-actions">
-                    <v-btn v-if="!hideCloseButton" icon @click="close">
+                    <v-btn
+                        v-if="!hideCloseButton"
+                        icon
+                        @click="close"
+                        :color="$vuetify.theme.dark ? 'white' : 'black'"
+                    >
                         <v-icon>mdi-close</v-icon>
                     </v-btn>
                 </slot>
