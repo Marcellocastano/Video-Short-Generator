@@ -1,136 +1,193 @@
 <template>
-    <div class="sidebar" :class="{ collapsed: isCollapsed }">
-        <div class="toggle-btn" @click="toggleSidebar">
-            <i
-                class="fas"
-                :class="isCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'"
-            ></i>
+    <v-navigation-drawer
+        v-model="drawer"
+        :rail="isCollapsed"
+        permanent
+        color="primary"
+        class="rounded-e-lg"
+    >
+        <div class="toggle-wrapper">
+            <v-btn
+                :icon="isCollapsed ? 'mdi-chevron-right' : 'mdi-chevron-left'"
+                variant="text"
+                @click="toggleSidebar"
+                color="white"
+                class="toggle-btn"
+                density="comfortable"
+            />
         </div>
 
-        <nav class="menu">
-            <router-link
+        <v-list>
+            <div v-if="!isCollapsed" class="logo-container">
+                <img src="../assets/logo.png" alt="Logo" />
+            </div>
+            <div v-else class="logo-container-collapsed">
+                <img src="../assets/favicon.png" alt="Logo" />
+            </div>
+            <v-list-item
                 to="/generate"
-                class="menu-item"
-                :title="isCollapsed ? 'Genera Video' : ''"
+                prepend-icon="mdi-video"
+                :tooltip="isCollapsed ? 'Genera Video' : ''"
+                class="mb-2 custom-list-item"
+                active-color="transparent"
+                :ripple="false"
             >
-                <i class="fas fa-video"></i>
-                <span v-if="!isCollapsed">Genera</span>
-            </router-link>
+                <template v-slot:prepend>
+                    <v-icon color="white">mdi-video</v-icon>
+                </template>
+                <v-list-item-title class="text-white">Genera</v-list-item-title>
+            </v-list-item>
 
-            <router-link
+            <v-list-item
                 to="/collection"
-                class="menu-item"
-                :title="isCollapsed ? 'Raccolta Video' : ''"
+                prepend-icon="mdi-filmstrip"
+                :tooltip="isCollapsed ? 'Raccolta Video' : ''"
+                class="mb-2 custom-list-item"
+                active-color="transparent"
+                :ripple="false"
             >
-                <i class="fas fa-film"></i>
-                <span v-if="!isCollapsed">Raccolta</span>
-            </router-link>
-        </nav>
-    </div>
+                <template v-slot:prepend>
+                    <v-icon color="white">mdi-filmstrip</v-icon>
+                </template>
+                <v-list-item-title class="text-white"
+                    >Raccolta</v-list-item-title
+                >
+            </v-list-item>
+        </v-list>
+
+        <template v-slot:append>
+            <div class="d-flex justify-center pa-2">
+                <template v-if="isCollapsed">
+                    <v-btn
+                        :icon="
+                            isDark ? 'mdi-weather-night' : 'mdi-weather-sunny'
+                        "
+                        variant="text"
+                        color="white"
+                        density="comfortable"
+                        @click="toggleTheme"
+                        class="theme-btn"
+                    />
+                </template>
+                <template v-else>
+                    <v-switch
+                        v-model="isDark"
+                        color="white"
+                        hide-details
+                        class="theme-switch"
+                        density="compact"
+                    >
+                        <template v-slot:prepend>
+                            <v-icon color="white" size="small">
+                                mdi-weather-sunny
+                            </v-icon>
+                        </template>
+                        <template v-slot:append>
+                            <v-icon color="white" size="small">
+                                mdi-weather-night
+                            </v-icon>
+                        </template>
+                    </v-switch>
+                </template>
+            </div>
+        </template>
+    </v-navigation-drawer>
 </template>
 
 <script setup>
-    import { ref } from 'vue';
+    import { ref, computed, onMounted } from 'vue';
+    import { useTheme } from 'vuetify';
 
-    // State
-    const isCollapsed = ref(false);
+    const theme = useTheme();
+    const drawer = ref(true);
+    const isCollapsed = ref(
+        localStorage.getItem('sidebarCollapsed') === 'true'
+    );
 
-    // Methods
+    // Initialize theme from localStorage or default to dark
+    onMounted(() => {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        theme.global.name.value = savedTheme;
+    });
+
+    const isDark = computed({
+        get: () => theme.global.current.value.dark,
+        set: value => {
+            theme.global.name.value = value ? 'dark' : 'light';
+            localStorage.setItem('theme', value ? 'dark' : 'light');
+        },
+    });
+
     const toggleSidebar = () => {
         isCollapsed.value = !isCollapsed.value;
+        localStorage.setItem('sidebarCollapsed', isCollapsed.value.toString());
+    };
+
+    const toggleTheme = () => {
+        isDark.value = !isDark.value;
     };
 </script>
 
 <style scoped>
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        height: 100vh;
-        width: var(--sidebar-width);
-        z-index: 1000;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(17px);
-        -webkit-backdrop-filter: blur(17px);
-        transition: all 0.3s ease;
-    }
-
-    .sidebar.collapsed {
-        width: var(--sidebar-width-collapsed);
+    .toggle-wrapper {
+        position: relative;
+        height: 64px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding-right: 12px;
     }
 
     .toggle-btn {
-        position: absolute;
-        right: -20px;
-        top: 20px;
-        background: #f0f0f0e6;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        color: white;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 50% !important;
+        background: rgba(255, 255, 255, 0.1);
     }
 
-    .menu {
-        padding: 20px 0;
-        margin-top: 40px;
+    .toggle-btn:hover {
+        background: rgba(255, 255, 255, 0.15) !important;
     }
 
-    .menu-item {
-        display: flex;
-        align-items: center;
-        padding: 30px 30px;
-        color: rgba(255, 255, 255, 0.9);
-        text-decoration: none;
+    .theme-btn {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .theme-btn:hover {
+        background: rgba(255, 255, 255, 0.15) !important;
+    }
+
+    .custom-list-item {
         transition: all 0.3s ease;
         border-left: 3px solid transparent;
     }
 
-    .menu-item:hover {
-        background: rgba(255, 255, 255, 0.1);
-        border-left: 3px solid rgba(255, 255, 255, 0.5);
+    .custom-list-item:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-left: 3px solid rgba(255, 255, 255, 0.7);
     }
 
-    .menu-item.router-link-active {
-        background: rgba(255, 255, 255, 0.15);
+    .custom-list-item.v-list-item--active {
+        background: rgba(255, 255, 255, 0.15) !important;
         border-left: 3px solid white;
     }
 
-    .menu-item i {
-        width: 20px;
-        text-align: center;
-        margin-right: 15px;
+    :deep(.v-list-item__prepend) {
         opacity: 0.9;
-        color: #092862;
     }
 
-    .menu-item span {
-        color: #092862;
-        font-size: 18px;
-    }
-
-    .collapsed .menu-item i {
-        margin-right: 0;
-    }
-
-    .menu-item span {
-        white-space: nowrap;
+    :deep(.v-list-item__content) {
         opacity: 0.9;
-        transition: opacity 0.3s ease;
-        font-weight: 500;
     }
 
-    /* Effetto hover sul testo */
-    .menu-item:hover span,
-    .menu-item:hover i {
+    .custom-list-item:hover :deep(.v-list-item__prepend),
+    .custom-list-item:hover :deep(.v-list-item__content) {
         opacity: 1;
+    }
+
+    :deep(.theme-switch .v-switch__track) {
+        opacity: 0.3;
+    }
+
+    :deep(.theme-switch .v-switch__thumb) {
+        color: white;
     }
 </style>

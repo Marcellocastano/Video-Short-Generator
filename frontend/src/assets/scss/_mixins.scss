@@ -1,0 +1,128 @@
+@use 'variables' as *;
+
+// Layout Mixins
+@mixin flex-center {
+    display: flex;
+    place-items: center;
+}
+
+@mixin flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+@mixin flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+// Component Mixins
+@mixin modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+@mixin modal-content {
+    background: $light-bg;
+    border-radius: $border-radius-lg;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: $box-shadow;
+}
+
+@mixin button-base {
+    border-radius: $border-radius;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color $transition-base;
+
+    &:hover {
+        border-color: $primary-color;
+    }
+
+    &:focus,
+    &:focus-visible {
+        outline: 4px auto -webkit-focus-ring-color;
+    }
+}
+
+// Theme Mixins
+@mixin dark-mode {
+    @media (prefers-color-scheme: dark) {
+        @content;
+    }
+}
+
+@mixin light-mode {
+    @media (prefers-color-scheme: light) {
+        @content;
+    }
+}
+
+// Animation Mixins
+@mixin fade-in {
+    animation: fadeIn $transition-base ease-in;
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+}
+
+@mixin slide-in($direction: 'right') {
+    $transform-start: translateX(100%);
+    @if $direction == 'left' {
+        $transform-start: translateX(-100%);
+    } @else if $direction == 'top' {
+        $transform-start: translateY(-100%);
+    } @else if $direction == 'bottom' {
+        $transform-start: translateY(100%);
+    }
+
+    animation: slideIn $transition-base ease-out;
+
+    @keyframes slideIn {
+        from {
+            transform: $transform-start;
+        }
+        to {
+            transform: translateX(0);
+        }
+    }
+}
+
+// Responsive Mixins
+@mixin mobile {
+    @media (max-width: $breakpoint-mobile) {
+        @content;
+    }
+}
+
+@mixin tablet {
+    @media (min-width: #{$breakpoint-mobile + 1px}) and (max-width: #{$breakpoint-tablet}) {
+        @content;
+    }
+}
+
+@mixin desktop {
+    @media (min-width: #{$breakpoint-tablet + 1px}) {
+        @content;
+    }
+}

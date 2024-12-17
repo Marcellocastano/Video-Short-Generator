@@ -1,86 +1,119 @@
 <template>
-    <div class="video-collection">
-        <h1>Raccolta Video</h1>
+    <v-container fluid class="pa-4">
+        <v-row>
+            <v-col cols="12">
+                <h1 class="text-h4 mb-6">Raccolta Video</h1>
+            </v-col>
+        </v-row>
 
-        <div class="video-grid">
-            <div v-for="video in videos" :key="video.id" class="video-card">
-                <div class="video-thumbnail">
-                    <VideoPlayer
-                        :src="video.file_path"
-                        :show-controls="false"
-                    />
-                    <div class="video-actions">
-                        <button
-                            class="action-menu"
-                            @click="toggleMenu(video.id)"
-                        >
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                        <div
-                            v-if="activeMenu === video.id"
-                            class="action-dropdown"
-                        >
-                            <button @click="showVideoInfo(video)">
-                                <i class="fas fa-info-circle"></i> Info
-                            </button>
-                            <button
-                                v-if="!isPublished(video)"
-                                @click="showPublishModal(video)"
-                            >
-                                <i class="fab fa-youtube"></i> Pubblica
-                            </button>
-                            <button
-                                class="delete-btn"
-                                @click="showDeleteConfirm(video)"
-                            >
-                                <i class="fas fa-trash"></i> Elimina
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="video-info">
-                    <div class="video-header">
-                        <h3>{{ video.title || 'Video senza titolo' }}</h3>
-                        <div
-                            class="status-tag"
-                            :class="getStatusClass(video)"
-                            :data-tooltip="getStatusTooltip(video)"
+        <v-row>
+            <v-col
+                v-for="video in videos"
+                :key="video.id"
+                cols="12"
+                sm="6"
+                md="4"
+                lg="3"
+            >
+                <v-card class="h-100">
+                    <div class="position-relative">
+                        <VideoPlayer
+                            :src="video.file_path"
+                            :show-controls="false"
+                            class="rounded-t"
+                        />
+                        <v-menu location="end">
+                            <template v-slot:activator="{ props }">
+                                <v-btn
+                                    icon="mdi-dots-vertical"
+                                    variant="text"
+                                    v-bind="props"
+                                    class="position-absolute top-0 end-0 ma-2 right-0"
+                                    :color="
+                                        $vuetify.theme.name === 'dark'
+                                            ? 'white'
+                                            : 'black'
+                                    "
+                                ></v-btn>
+                            </template>
+
+                            <v-list>
+                                <v-list-item @click="showVideoInfo(video)">
+                                    <template v-slot:prepend>
+                                        <v-icon>mdi-information</v-icon>
+                                    </template>
+                                    <v-list-item-title>Info</v-list-item-title>
+                                </v-list-item>
+
+                                <v-list-item
+                                    v-if="!isPublished(video)"
+                                    @click="showPublishModal(video)"
+                                >
+                                    <template v-slot:prepend>
+                                        <v-icon>mdi-youtube</v-icon>
+                                    </template>
+                                    <v-list-item-title
+                                        >Pubblica</v-list-item-title
+                                    >
+                                </v-list-item>
+
+                                <v-list-item
+                                    @click="showDeleteConfirm(video)"
+                                    color="error"
+                                >
+                                    <template v-slot:prepend>
+                                        <v-icon>mdi-delete</v-icon>
+                                    </template>
+                                    <v-list-item-title
+                                        >Elimina</v-list-item-title
+                                    >
+                                </v-list-item>
+                            </v-list>
+                        </v-menu>
+                        <v-chip
+                            :color="getStatusColor(video)"
+                            size="small"
+                            :title="getStatusTooltip(video)"
+                            class="status-chip"
                         >
                             {{ getStatusText(video) }}
-                        </div>
+                        </v-chip>
                     </div>
-                    <p>{{ video.description || 'Nessuna descrizione' }}</p>
-                    <div class="video-metadata">
-                        <span
-                            ><i class="fas fa-calendar"></i>
-                            {{ formatDate(video.created_at) }}</span
+
+                    <v-card-text>
+                        <div
+                            class="d-flex align-center justify-space-between mb-2"
                         >
-                    </div>
-                </div>
-            </div>
-        </div>
+                            <div class="text-h6 text-truncate">
+                                {{ video.title || 'Video senza titolo' }}
+                            </div>
+                        </div>
+                        <p class="text-body-2 text-truncate mb-2">
+                            {{ video.description || 'Nessuna descrizione' }}
+                        </p>
+                        <div class="d-flex align-center">
+                            <v-icon size="small" class="me-1"
+                                >mdi-calendar</v-icon
+                            >
+                            <span class="text-caption">{{
+                                formatDate(video.created_at)
+                            }}</span>
+                        </div>
+                    </v-card-text>
+                </v-card>
+            </v-col>
+        </v-row>
 
-        <div v-if="totalVideos > 8" class="pagination">
-            <button
-                :disabled="currentPage === 1"
-                @click="changePage(currentPage - 1)"
-                class="page-btn"
-            >
-                <i class="fas fa-chevron-left"></i>
-            </button>
-
-            <span class="page-info"
-                >Pagina {{ currentPage }} di {{ totalPages }}</span
-            >
-
-            <button
-                :disabled="currentPage === totalPages"
-                @click="changePage(currentPage + 1)"
-                class="page-btn"
-            >
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        </div>
+        <v-row v-if="totalVideos > 8" justify="center" class="mt-6">
+            <v-col cols="auto">
+                <v-pagination
+                    v-model="currentPage"
+                    :length="totalPages"
+                    :total-visible="5"
+                    @update:model-value="changePage"
+                ></v-pagination>
+            </v-col>
+        </v-row>
 
         <!-- Modali -->
         <DeleteVideoModal
@@ -100,24 +133,23 @@
             :video="selectedVideo"
             @publish="handlePublish"
         />
-    </div>
+    </v-container>
 </template>
 
 <script setup>
     import { ref, onMounted } from 'vue';
     import axios from 'axios';
-    import DeleteVideoModal from '../components/DeleteVideoModal.vue';
-    import VideoInfoModal from '../components/VideoInfoModal.vue';
+    import DeleteVideoModal from '../components/Modals/DeleteVideoModal.vue';
+    import VideoInfoModal from '../components/Modals/VideoInfoModal.vue';
     import VideoPlayer from '../components/VideoPlayer.vue';
-    import PublishModal from '../components/PublishModal.vue';
+    import PublishModal from '../components/Modals/PublishModal.vue';
 
     // Stato
     const videos = ref([]);
-    const activeMenu = ref(null);
-    const isPublishModalVisible = ref(false);
     const selectedVideo = ref(null);
     const showDeleteModal = ref(false);
     const showInfoModal = ref(false);
+    const isPublishModalVisible = ref(false);
     const currentPage = ref(1);
     const totalPages = ref(1);
     const pageSize = ref(8);
@@ -159,19 +191,19 @@
         });
     };
 
-    const toggleMenu = videoId => {
-        activeMenu.value = activeMenu.value === videoId ? null : videoId;
-    };
-
     const showVideoInfo = video => {
         selectedVideo.value = video;
         showInfoModal.value = true;
-        activeMenu.value = null;
     };
 
     const showPublishModal = video => {
         selectedVideo.value = video;
         isPublishModalVisible.value = true;
+    };
+
+    const showDeleteConfirm = video => {
+        selectedVideo.value = video;
+        showDeleteModal.value = true;
     };
 
     const handlePublish = async publishData => {
@@ -199,258 +231,39 @@
         }
     };
 
-    const isPublished = video => {
-        return video.youtube_id && video.publish_status === 'published';
-    };
-
-    const showDeleteConfirm = video => {
-        selectedVideo.value = video;
-        showDeleteModal.value = true;
-        activeMenu.value = null;
-    };
-
     const changePage = page => {
         currentPage.value = page;
         fetchVideos();
     };
 
-    const getStatusClass = video => {
-        if (video.youtube_id) {
-            if (video.publish_status === 'published') {
-                return 'status-published';
-            } else if (video.publish_status === 'scheduled') {
-                return 'status-scheduled';
-            }
-        }
-        return 'status-draft';
+    const isPublished = video => {
+        return video.youtube_id && video.youtube_privacy !== 'private';
     };
 
     const getStatusText = video => {
         if (video.youtube_id) {
-            if (video.publish_status === 'published') {
-                return 'Pubblicato';
-            } else if (video.publish_status === 'scheduled') {
-                return 'Programmato';
-            }
+            return video.youtube_privacy === 'private'
+                ? 'Non Pubblicato'
+                : 'Pubblicato';
         }
-        return 'Bozza';
+        return 'In Locale';
+    };
+
+    const getStatusColor = video => {
+        if (video.youtube_id) {
+            return video.youtube_privacy === 'private' ? 'warning' : 'success';
+        }
+        return 'info';
     };
 
     const getStatusTooltip = video => {
-        if (video.publish_status === 'scheduled' && video.publish_at) {
-            return `Programmato per: ${formatDate(video.publish_at)}`;
+        if (video.youtube_id) {
+            return video.youtube_privacy === 'private'
+                ? 'Video caricato su YouTube ma non pubblicato'
+                : 'Video pubblicato su YouTube';
         }
-        return '';
+        return 'Video presente solo in locale';
     };
 
-    // Lifecycle hooks
-    onMounted(() => {
-        fetchVideos();
-        // Chiudi il menu quando si clicca fuori
-        document.addEventListener('click', e => {
-            if (!e.target.closest('.video-actions')) {
-                activeMenu.value = null;
-            }
-        });
-    });
+    onMounted(fetchVideos);
 </script>
-
-<style scoped>
-    .video-collection {
-        padding: 2rem;
-    }
-
-    .video-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-top: 2rem;
-    }
-
-    .video-card {
-        background: white;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s;
-    }
-
-    .video-card:hover {
-        transform: translateY(-2px);
-    }
-
-    .video-thumbnail {
-        position: relative;
-        width: 100%;
-        background: #f0f0f0;
-    }
-
-    .video-info {
-        padding: 1rem;
-    }
-
-    .video-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 0.5rem;
-    }
-
-    .video-header h3 {
-        margin: 0;
-        font-size: 1.1rem;
-        color: #333;
-        flex: 1;
-        margin-right: 1rem;
-    }
-
-    .video-metadata {
-        margin-top: 1rem;
-        font-size: 0.9rem;
-        color: #666;
-    }
-
-    .video-metadata span {
-        margin-right: 1rem;
-    }
-
-    .video-metadata i {
-        margin-right: 0.5rem;
-    }
-
-    .video-actions {
-        position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
-        z-index: 10;
-    }
-
-    .action-menu {
-        background: rgba(0, 0, 0, 0.5);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background-color 0.2s;
-    }
-
-    .action-menu:hover {
-        background: rgba(0, 0, 0, 0.7);
-    }
-
-    .action-dropdown {
-        position: absolute;
-        top: 100%;
-        right: 0;
-        background: white;
-        border-radius: 4px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        overflow: hidden;
-        min-width: 150px;
-    }
-
-    .action-dropdown button {
-        display: block;
-        width: 100%;
-        padding: 0.75rem 1rem;
-        text-align: left;
-        border: none;
-        background: none;
-        cursor: pointer;
-        color: #333;
-        font-size: 0.9rem;
-        transition: background-color 0.2s;
-    }
-
-    .action-dropdown button:hover {
-        background-color: #f5f5f5;
-    }
-
-    .action-dropdown button.delete-btn {
-        color: #dc3545;
-    }
-
-    .action-dropdown button.delete-btn:hover {
-        background-color: #fff5f5;
-    }
-
-    .action-dropdown button i {
-        margin-right: 0.5rem;
-        width: 16px;
-    }
-
-    .pagination {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-top: 2rem;
-        gap: 1rem;
-    }
-
-    .page-btn {
-        background: #f0f0f0;
-        border: none;
-        border-radius: 4px;
-        padding: 0.5rem 1rem;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-
-    .page-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .page-btn:not(:disabled):hover {
-        background: #e0e0e0;
-    }
-
-    .page-info {
-        font-size: 0.9rem;
-        color: #666;
-    }
-
-    .status-tag {
-        font-size: 0.8rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 12px;
-        font-weight: 500;
-        position: relative;
-    }
-
-    .status-draft {
-        background-color: #f0f0f0;
-        color: #666;
-    }
-
-    .status-published {
-        background-color: #d4edda;
-        color: #155724;
-    }
-
-    .status-scheduled {
-        background-color: #fff3cd;
-        color: #856404;
-    }
-
-    [data-tooltip]:hover::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        bottom: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 0.5rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        white-space: nowrap;
-        z-index: 1000;
-        margin-bottom: 5px;
-    }
-</style>

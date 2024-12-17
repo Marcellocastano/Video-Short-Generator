@@ -1,5 +1,5 @@
 <template>
-    <div class="video-player" :class="{ 'is-playing': isPlaying }">
+    <v-card class="video-player rounded-lg overflow-hidden" flat>
         <video
             ref="videoRef"
             class="video-element"
@@ -14,46 +14,76 @@
             Il tuo browser non supporta il tag video.
         </video>
 
-        <div class="video-controls" v-if="showControls">
-            <div class="progress-bar" @click="seek">
-                <div class="progress" :style="{ width: progress + '%' }"></div>
-            </div>
+        <div
+            v-if="showControls"
+            class="video-controls d-flex flex-column pa-2 bg-black bg-opacity-50"
+        >
+            <v-slider
+                v-model="progress"
+                @click="seek"
+                density="compact"
+                color="white"
+                track-color="grey-darken-2"
+                hide-details
+                class="mb-1"
+            ></v-slider>
 
-            <div class="controls-buttons">
-                <button class="control-btn" @click="togglePlay">
-                    <i :class="isPlaying ? 'fas fa-pause' : 'fas fa-play'"></i>
-                </button>
+            <div class="d-flex align-center">
+                <v-btn
+                    icon="mdi-play"
+                    :icon="isPlaying ? 'mdi-pause' : 'mdi-play'"
+                    @click="togglePlay"
+                    variant="text"
+                    color="white"
+                    density="comfortable"
+                    class="mr-2"
+                ></v-btn>
 
-                <div class="time">
+                <div class="time text-white text-caption mr-4">
                     {{ formatTime(currentTime) }} / {{ formatTime(duration) }}
                 </div>
 
-                <div class="volume-control">
-                    <button class="control-btn" @click="toggleMute">
-                        <i :class="volumeIcon"></i>
-                    </button>
-                    <input
-                        type="range"
+                <div class="d-flex align-center">
+                    <v-btn
+                        :icon="volumeIcon"
+                        @click="toggleMute"
+                        variant="text"
+                        color="white"
+                        density="comfortable"
+                        class="mr-2"
+                    ></v-btn>
+
+                    <v-slider
+                        v-model="volume"
                         min="0"
                         max="1"
                         step="0.1"
-                        v-model="volume"
-                        class="volume-slider"
-                    />
+                        class="volume-slider mt-0 pt-0"
+                        color="white"
+                        track-color="grey-darken-2"
+                        hide-details
+                        density="compact"
+                        style="max-width: 100px"
+                    ></v-slider>
                 </div>
 
-                <button class="control-btn" @click="toggleFullscreen">
-                    <i class="fas fa-expand"></i>
-                </button>
+                <v-spacer></v-spacer>
+
+                <v-btn
+                    icon="mdi-fullscreen"
+                    @click="toggleFullscreen"
+                    variant="text"
+                    color="white"
+                    density="comfortable"
+                ></v-btn>
             </div>
         </div>
-    </div>
+    </v-card>
 </template>
 
 <script setup>
     import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 
-    // Props definition
     const props = defineProps({
         src: {
             type: String,
@@ -69,7 +99,6 @@
         },
     });
 
-    // Refs
     const videoRef = ref(null);
     const isPlaying = ref(false);
     const currentTime = ref(0);
@@ -79,14 +108,12 @@
     const progress = ref(0);
     const error = ref(null);
 
-    // Computed
     const volumeIcon = computed(() => {
-        if (volume.value === 0 || isMuted.value) return 'fas fa-volume-mute';
-        if (volume.value < 0.5) return 'fas fa-volume-down';
-        return 'fas fa-volume-up';
+        if (volume.value === 0 || isMuted.value) return 'mdi-volume-off';
+        if (volume.value < 0.5) return 'mdi-volume-medium';
+        return 'mdi-volume-high';
     });
 
-    // Methods
     const togglePlay = () => {
         const video = videoRef.value;
         if (video.paused) {
@@ -150,14 +177,12 @@
         error.value = e.target.error;
     };
 
-    // Watch
     watch(volume, newValue => {
         const video = videoRef.value;
         video.volume = newValue;
         isMuted.value = newValue === 0;
     });
 
-    // Lifecycle hooks
     onMounted(() => {
         const video = videoRef.value;
         video.addEventListener('timeupdate', updateProgress);
@@ -174,8 +199,6 @@
         position: relative;
         width: 100%;
         background: #000;
-        border-radius: 8px;
-        overflow: hidden;
         height: 300px;
     }
 
@@ -190,8 +213,6 @@
         bottom: 0;
         left: 0;
         right: 0;
-        background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
-        padding: 10px;
         opacity: 0;
         transition: opacity 0.3s ease;
     }
@@ -200,73 +221,11 @@
         opacity: 1;
     }
 
-    .progress-bar {
-        width: 100%;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.3);
-        cursor: pointer;
-        border-radius: 2px;
-        margin-bottom: 10px;
+    :deep(.v-slider .v-slider-track__fill) {
+        background-color: white !important;
     }
 
-    .progress {
-        height: 100%;
-        background: #3498db;
-        border-radius: 2px;
-        transition: width 0.1s linear;
-    }
-
-    .controls-buttons {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-
-    .control-btn {
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        padding: 5px;
-        font-size: 1.2em;
-        transition: transform 0.2s ease;
-    }
-
-    .control-btn:hover {
-        transform: scale(1.1);
-    }
-
-    .time {
-        color: white;
-        font-size: 0.9em;
-        min-width: 100px;
-    }
-
-    .volume-control {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .volume-slider {
-        width: 60px;
-        height: 4px;
-        /* -webkit-appearance: none; */
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 2px;
-        transition: width 0.2s ease;
-    }
-
-    .volume-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 12px;
-        height: 12px;
-        background: white;
-        border-radius: 50%;
-        cursor: pointer;
-    }
-
-    .volume-control:hover .volume-slider {
-        width: 100px;
+    :deep(.v-slider .v-slider-thumb) {
+        color: white !important;
     }
 </style>

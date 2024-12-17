@@ -1,0 +1,65 @@
+@use 'variables' as *;
+
+// Glass container styles
+.glass-container {
+    max-width: 950px;
+    backdrop-filter: blur($glass-blur);
+    background: $dark-theme-surface !important;
+    border: 1px solid $dark-theme-border;
+    border-radius: $border-radius-lg;
+    margin: 0 auto;
+    color: $light-text;
+    @media (max-width: $breakpoint-lg) {
+        min-width: unset;
+        width: 100%;
+        margin: $spacing-base;
+    }
+}
+
+// Form container styles
+.content {
+    width: 100%;
+    padding: $spacing-lg;
+}
+
+// Preview player styles
+.preview-player {
+    width: 100%;
+    border-radius: $border-radius;
+    margin-top: $spacing-md;
+}
+
+// Selected music info styles
+.selected-music-info {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+// Logo container styles
+.logo-container {
+    text-align: center;
+    margin-bottom: $spacing-xl;
+
+    img {
+        max-width: 200px;
+        height: auto;
+    }
+}
+
+// Form elements spacing
+.flex-container {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-lg;
+    margin-bottom: $spacing-lg;
+}
+
+.music-search {
+    width: 100%;
+}
+
+.video-title {
+    font-weight: $font-weight-medium;
+    color: $disabled-color;
+    margin-top: $spacing-sm;
+}

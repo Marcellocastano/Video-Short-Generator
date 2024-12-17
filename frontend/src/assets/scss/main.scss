@@ -1,0 +1,92 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+@use 'components';
+
+:root {
+    font-family: $font-family-base;
+    line-height: $line-height-base;
+    font-weight: $font-weight-base;
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    margin: 0;
+    min-width: $breakpoint-mobile;
+    min-height: 100vh;
+}
+
+.v-theme--dark.v-application {
+    background: rgb(27, 114, 172);
+    background: linear-gradient(
+        221deg,
+        rgba(27, 114, 172, 1) 0%,
+        rgba(22, 55, 116, 1) 50%
+    );
+    color: $light-text;
+}
+
+.v-theme--light.v-application {
+    background: rgb(140, 197, 235);
+    background: linear-gradient(
+        221deg,
+        rgba(140, 197, 235, 1) 0%,
+        rgb(47, 130, 185) 50%
+    );
+    color: $dark-text;
+}
+
+#app {
+    width: 100%;
+    min-height: 100vh;
+    text-align: center;
+}
+
+a {
+    font-weight: $font-weight-medium;
+    color: $primary-color;
+    text-decoration: inherit;
+
+    &:hover {
+        color: $primary-hover;
+    }
+}
+
+h1 {
+    font-size: 3.2em;
+    line-height: 1.1;
+}
+
+button {
+    @include button-base;
+
+    .v-theme--dark & {
+        background-color: $button-bg-dark;
+    }
+
+    .v-theme--light & {
+        background-color: $button-bg-light;
+    }
+}
+
+.card {
+    padding: $spacing-lg;
+}
+
+.primary-border {
+    border: 2px solid rgb(var(--v-theme-primary));
+}
+
+.status-chip {
+    position: absolute;
+    top: 16px;
+    left: 10px;
+}
+
+.logo-container-collapsed img {
+    width: 55px;
+    margin-bottom: 20px;
+}

@@ -166,7 +166,7 @@
 <script setup>
     import { ref, watch } from 'vue';
     import axios from 'axios';
-    import Modal from './Modals/Modal.vue';
+    import Modal from './Modal.vue';
 
     // Props definition
     const props = defineProps({
