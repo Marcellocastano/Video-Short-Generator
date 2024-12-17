@@ -41,5 +41,9 @@
         "**/*.{js,jsx,ts,tsx,vue,css,scss,json,md}": [
             "prettier --write"
         ]
+    },
+    "volta": {
+        "node": "18.16.0",
+        "npm": "9.6.7"
     }
 }

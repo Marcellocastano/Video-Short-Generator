@@ -1,5 +1,6 @@
 <template>
     <v-container class="generate-page">
+        <h1 class="text-h4 mb-8">Genera Video</h1>
         <v-card class="glass-container">
             <v-card-text class="content">
                 <div class="generate-container">
